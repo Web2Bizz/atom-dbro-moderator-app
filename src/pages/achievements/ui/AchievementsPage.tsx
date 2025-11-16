@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useApiQuery, useApiMutation } from '@shared/lib/hooks'
 import { patch, del } from '@shared/lib/api/client'
 import { useQueryClient } from '@tanstack/react-query'
@@ -39,7 +39,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import type { Achievement, CreateAchievementDto } from '@shared/lib/api/types'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, X } from 'lucide-react'
 
 const achievementSchema = z.object({
   title: z.string().min(1, 'Название обязательно'),
@@ -54,12 +54,25 @@ export const AchievementsPage = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const queryClient = useQueryClient()
 
   const { data: achievements = [], isLoading } = useApiQuery<Achievement[]>(
     ['achievements'],
     '/achievements'
   )
+
+  // Фильтрация достижений
+  const filteredAchievements = useMemo(() => {
+    if (!searchQuery) return achievements
+    const query = searchQuery.toLowerCase()
+    return achievements.filter(
+      (achievement) =>
+        achievement.title?.toLowerCase().includes(query) ||
+        achievement.description?.toLowerCase().includes(query) ||
+        achievement.rarity?.toLowerCase().includes(query)
+    )
+  }, [achievements, searchQuery])
 
   const createMutation = useApiMutation<Achievement, CreateAchievementDto>({
     endpoint: '/achievements',
@@ -248,6 +261,27 @@ export const AchievementsPage = () => {
           </Dialog>
         </div>
 
+        {/* Фильтры */}
+        <div className="flex items-center gap-4 p-4 border rounded-lg bg-card">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Поиск по названию, описанию или редкости..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="text-muted-foreground">Загрузка...</div>
         ) : (
@@ -262,14 +296,16 @@ export const AchievementsPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {achievements.length === 0 ? (
+              {filteredAchievements.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Нет достижений
+                    {achievements.length === 0
+                      ? 'Нет достижений'
+                      : 'Не найдено достижений по заданным фильтрам'}
                   </TableCell>
                 </TableRow>
               ) : (
-                achievements.map((achievement) => (
+                filteredAchievements.map((achievement) => (
                   <TableRow key={achievement.id}>
                     <TableCell>{achievement.id}</TableCell>
                     <TableCell>{achievement.title}</TableCell>

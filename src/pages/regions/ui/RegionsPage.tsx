@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useApiQuery, useApiMutation, useToast } from '@shared/lib/hooks'
 import { patch, del } from '@shared/lib/api/client'
 import { useQueryClient } from '@tanstack/react-query'
@@ -32,7 +32,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import type { Region, CreateRegionDto } from '@shared/lib/api/types'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, X } from 'lucide-react'
 
 const regionSchema = z.object({
   name: z.string().min(1, 'Название обязательно'),
@@ -44,6 +44,7 @@ export const RegionsPage = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingRegion, setEditingRegion] = useState<Region | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
@@ -51,6 +52,15 @@ export const RegionsPage = () => {
     ['regions'],
     '/regions'
   )
+
+  // Фильтрация регионов
+  const filteredRegions = useMemo(() => {
+    if (!searchQuery) return regions
+    const query = searchQuery.toLowerCase()
+    return regions.filter((region) =>
+      region.name?.toLowerCase().includes(query)
+    )
+  }, [regions, searchQuery])
 
   const createMutation = useApiMutation<Region, CreateRegionDto>({
     endpoint: '/regions',
@@ -197,6 +207,27 @@ export const RegionsPage = () => {
           </Dialog>
         </div>
 
+        {/* Фильтры */}
+        <div className="flex items-center gap-4 p-4 border rounded-lg bg-card">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Поиск по названию..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="text-muted-foreground">Загрузка...</div>
         ) : (
@@ -209,14 +240,16 @@ export const RegionsPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {regions.length === 0 ? (
+              {filteredRegions.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center text-muted-foreground">
-                    Нет регионов
+                    {regions.length === 0
+                      ? 'Нет регионов'
+                      : 'Не найдено регионов по заданным фильтрам'}
                   </TableCell>
                 </TableRow>
               ) : (
-                regions.map((region) => (
+                filteredRegions.map((region) => (
                   <TableRow key={region.id}>
                     <TableCell>{region.id}</TableCell>
                     <TableCell>{region.name}</TableCell>

@@ -25,11 +25,11 @@ export const Layout = ({ children }: LayoutProps) => {
   const { session, logout } = useSession()
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <div className="flex flex-1 min-h-0">
         {/* Sidebar */}
-        <aside className="w-64 border-r border-border bg-background">
-          <div className="p-6">
+        <aside className="w-64 border-r border-border bg-background flex flex-col">
+          <div className="p-6 flex-1 overflow-y-auto">
             <h2 className="text-lg font-light mb-6">Модератор</h2>
             <nav className="space-y-1">
               {navigation.map((item) => {
@@ -53,9 +53,9 @@ export const Layout = ({ children }: LayoutProps) => {
         </aside>
 
         {/* Main content */}
-        <div className="flex-1">
+        <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
-          <header className="border-b border-border bg-background">
+          <header className="border-b border-border bg-background flex-shrink-0">
             <div className="flex items-center justify-between px-6 py-4">
               <div>
                 <h1 className="text-xl font-light">
@@ -85,7 +85,7 @@ export const Layout = ({ children }: LayoutProps) => {
           </header>
 
           {/* Page content */}
-          <main className="p-6">{children}</main>
+          <main className="p-6 flex-1 overflow-y-auto">{children}</main>
         </div>
       </div>
     </div>

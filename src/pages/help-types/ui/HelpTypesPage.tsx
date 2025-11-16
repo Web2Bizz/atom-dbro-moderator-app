@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useApiQuery, useApiMutation } from '@shared/lib/hooks'
 import { patch, del } from '@shared/lib/api/client'
 import { useQueryClient } from '@tanstack/react-query'
@@ -33,7 +33,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import type { HelpType, CreateHelpTypeDto } from '@shared/lib/api/types'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, X } from 'lucide-react'
 
 const helpTypeSchema = z.object({
   name: z.string().min(1, 'Название обязательно'),
@@ -46,12 +46,24 @@ export const HelpTypesPage = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingHelpType, setEditingHelpType] = useState<HelpType | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const queryClient = useQueryClient()
 
   const { data: helpTypes = [], isLoading } = useApiQuery<HelpType[]>(
     ['help-types'],
     '/help-types'
   )
+
+  // Фильтрация видов помощи
+  const filteredHelpTypes = useMemo(() => {
+    if (!searchQuery) return helpTypes
+    const query = searchQuery.toLowerCase()
+    return helpTypes.filter(
+      (helpType) =>
+        helpType.name?.toLowerCase().includes(query) ||
+        helpType.description?.toLowerCase().includes(query)
+    )
+  }, [helpTypes, searchQuery])
 
   const createMutation = useApiMutation<HelpType, CreateHelpTypeDto>({
     endpoint: '/help-types',
@@ -186,6 +198,27 @@ export const HelpTypesPage = () => {
           </Dialog>
         </div>
 
+        {/* Фильтры */}
+        <div className="flex items-center gap-4 p-4 border rounded-lg bg-card">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Поиск по названию или описанию..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="text-muted-foreground">Загрузка...</div>
         ) : (
@@ -199,14 +232,16 @@ export const HelpTypesPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {helpTypes.length === 0 ? (
+              {filteredHelpTypes.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    Нет видов помощи
+                    {helpTypes.length === 0
+                      ? 'Нет видов помощи'
+                      : 'Не найдено видов помощи по заданным фильтрам'}
                   </TableCell>
                 </TableRow>
               ) : (
-                helpTypes.map((helpType) => (
+                filteredHelpTypes.map((helpType) => (
                   <TableRow key={helpType.id}>
                     <TableCell>{helpType.id}</TableCell>
                     <TableCell>{helpType.name}</TableCell>

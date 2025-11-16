@@ -45,7 +45,7 @@ import type {
   City,
   OrganizationType,
 } from "@shared/lib/api/types";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, X } from "lucide-react";
 
 const organizationSchema = z.object({
   name: z.string().min(1, "Название обязательно"),
@@ -63,30 +63,57 @@ export const OrganizationsPage = () => {
   const [editingOrganization, setEditingOrganization] =
     useState<Organization | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterTypeId, setFilterTypeId] = useState<number | null>(null);
+  const [filterCityId, setFilterCityId] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { data: cities = [] } = useApiQuery<City[]>(["cities"], "/cities");
-  const { data: organizationTypesRaw } = useApiQuery<
-    OrganizationType[] | { type: OrganizationType[] }
-  >(["organization-types"], "/organization-types");
+  const { 
+    data: organizationTypesRaw, 
+    isLoading: isLoadingTypes,
+    error: organizationTypesError 
+  } = useApiQuery<OrganizationType[] | { type: OrganizationType[] } | { data: OrganizationType[] }>(
+    ["organization-types"], 
+    "/organization-types"
+  );
 
   // Обрабатываем разные форматы ответа API
-  // API может возвращать либо массив напрямую, либо объект с полем type
+  // API может возвращать либо массив напрямую, либо объект с полем type, data, organizationTypes, или types
   const organizationTypes = useMemo(() => {
     if (!organizationTypesRaw) return [];
+    
+    // Если это массив - возвращаем как есть
     if (Array.isArray(organizationTypesRaw)) {
       return organizationTypesRaw;
     }
-    // Если это объект с полем type
-    if (
-      typeof organizationTypesRaw === "object" &&
-      "type" in organizationTypesRaw
-    ) {
-      return Array.isArray(organizationTypesRaw.type)
-        ? organizationTypesRaw.type
-        : [];
+    
+    // Если это объект, проверяем различные возможные поля
+    if (typeof organizationTypesRaw === "object" && organizationTypesRaw !== null) {
+      const obj = organizationTypesRaw as Record<string, unknown>;
+      
+      // Проверяем поле type
+      if ("type" in obj && Array.isArray(obj.type)) {
+        return obj.type as OrganizationType[];
+      }
+      
+      // Проверяем поле data
+      if ("data" in obj && Array.isArray(obj.data)) {
+        return obj.data as OrganizationType[];
+      }
+      
+      // Проверяем поле organizationTypes
+      if ("organizationTypes" in obj && Array.isArray(obj.organizationTypes)) {
+        return obj.organizationTypes as OrganizationType[];
+      }
+      
+      // Проверяем поле types
+      if ("types" in obj && Array.isArray(obj.types)) {
+        return obj.types as OrganizationType[];
+      }
     }
+    
     return [];
   }, [organizationTypesRaw]);
 
@@ -94,6 +121,37 @@ export const OrganizationsPage = () => {
     ["organizations"],
     "/organizations"
   );
+
+  // Фильтрация организаций
+  const filteredOrganizations = useMemo(() => {
+    return organizations.filter((org) => {
+      // Фильтр по поисковому запросу (название, адрес)
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          org.name?.toLowerCase().includes(query) ||
+          org.address?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+
+      // Фильтр по типу организации
+      if (filterTypeId !== null) {
+        const orgTypeId =
+          org.organizationTypeId ||
+          org.organizationType?.id ||
+          org.type?.id;
+        if (orgTypeId !== filterTypeId) return false;
+      }
+
+      // Фильтр по городу
+      if (filterCityId !== null) {
+        const orgCityId = org.cityId || org.city?.id;
+        if (orgCityId !== filterCityId) return false;
+      }
+
+      return true;
+    });
+  }, [organizations, searchQuery, filterTypeId, filterCityId]);
 
   const createMutation = useApiMutation<Organization, CreateOrganizationDto>({
     endpoint: "/organizations",
@@ -149,35 +207,51 @@ export const OrganizationsPage = () => {
       "[OrganizationsPage] Processed organizationTypes:",
       organizationTypes
     );
+    console.log(
+      "[OrganizationsPage] isLoadingTypes:",
+      isLoadingTypes
+    );
+    console.log(
+      "[OrganizationsPage] organizationTypesError:",
+      organizationTypesError
+    );
+    if (organizationTypesError) {
+      console.error(
+        "[OrganizationsPage] Error loading organization types:",
+        organizationTypesError
+      );
+    }
     if (organizationTypes.length > 0) {
       console.log(
         "[OrganizationsPage] Organization types structure:",
         JSON.stringify(organizationTypes, null, 2)
       );
-    } else {
-      console.log(
-        "[OrganizationsPage] Organization types is empty or not loaded"
+    } else if (!isLoadingTypes && !organizationTypesError) {
+      console.warn(
+        "[OrganizationsPage] Organization types is empty but no error. Raw data:",
+        organizationTypesRaw
       );
     }
-  }, [organizationTypesRaw, organizationTypes]);
+  }, [organizationTypesRaw, organizationTypes, isLoadingTypes, organizationTypesError]);
 
   useEffect(() => {
-    if (
-      editingOrganization &&
-      organizationTypes.length > 0 &&
-      cities.length > 0
-    ) {
+    if (editingOrganization) {
       const formData = {
         name: editingOrganization.name || "",
-        organizationTypeId: editingOrganization.organizationTypeId,
-        cityId: editingOrganization.cityId,
+        organizationTypeId:
+          editingOrganization.type?.id ||
+          editingOrganization.organizationType?.id ||
+          editingOrganization.organizationTypeId,
+        cityId:
+          editingOrganization.city?.id ||
+          editingOrganization.cityId,
         address: editingOrganization.address || "",
         summary: editingOrganization.summary || "",
         description: editingOrganization.description || "",
       };
 
       editForm.reset(formData);
-    } else if (!editingOrganization) {
+    } else {
       editForm.reset({
         name: "",
         organizationTypeId: undefined,
@@ -191,22 +265,72 @@ export const OrganizationsPage = () => {
   }, [editingOrganization, organizationTypes, cities]);
 
   const handleCreate = (data: OrganizationFormData) => {
-    createMutation.mutate(data);
+    // Убеждаемся, что organizationTypeId и cityId являются числами
+    const createData: CreateOrganizationDto = {
+      name: data.name,
+      organizationTypeId: Number(data.organizationTypeId),
+      cityId: Number(data.cityId),
+      address: data.address || undefined,
+      summary: data.summary || undefined,
+      description: data.description || undefined,
+    };
+    
+    // Валидация перед отправкой
+    if (!createData.organizationTypeId || isNaN(createData.organizationTypeId)) {
+      toast({
+        title: "Ошибка",
+        description: "Необходимо выбрать тип организации",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!createData.cityId || isNaN(createData.cityId)) {
+      toast({
+        title: "Ошибка",
+        description: "Необходимо выбрать город",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createMutation.mutate(createData);
   };
 
   const handleEdit = async (data: OrganizationFormData) => {
     if (editingOrganization) {
       setIsUpdating(true);
       try {
-        // Отправляем все поля формы
+        // Убеждаемся, что organizationTypeId и cityId являются числами
         const updateData = {
           name: data.name,
-          organizationTypeId: data.organizationTypeId,
-          cityId: data.cityId,
+          organizationTypeId: Number(data.organizationTypeId),
+          cityId: Number(data.cityId),
           address: data.address || undefined,
           summary: data.summary || undefined,
           description: data.description || undefined,
         };
+        
+        // Валидация перед отправкой
+        if (!updateData.organizationTypeId || isNaN(updateData.organizationTypeId)) {
+          toast({
+            title: "Ошибка",
+            description: "Необходимо выбрать тип организации",
+            variant: "destructive",
+          });
+          setIsUpdating(false);
+          return;
+        }
+        
+        if (!updateData.cityId || isNaN(updateData.cityId)) {
+          toast({
+            title: "Ошибка",
+            description: "Необходимо выбрать город",
+            variant: "destructive",
+          });
+          setIsUpdating(false);
+          return;
+        }
 
         await patch<Organization>(
           `/organizations/${editingOrganization.id}`,
@@ -298,10 +422,13 @@ export const OrganizationsPage = () => {
                       <FormItem>
                         <FormLabel>Тип организации</FormLabel>
                         <Select
-                          onValueChange={(value) =>
-                            field.onChange(Number(value))
-                          }
-                          value={field.value?.toString()}
+                          onValueChange={(value) => {
+                            const numValue = Number(value);
+                            if (!isNaN(numValue) && numValue > 0) {
+                              field.onChange(numValue);
+                            }
+                          }}
+                          value={field.value && field.value > 0 ? field.value.toString() : undefined}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -309,14 +436,28 @@ export const OrganizationsPage = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {organizationTypes.map((type) => (
-                              <SelectItem
-                                key={type.id}
-                                value={type.id.toString()}
-                              >
-                                {type.name}
-                              </SelectItem>
-                            ))}
+                            {isLoadingTypes ? (
+                              <div className="py-6 text-center text-sm text-muted-foreground">
+                                Загрузка...
+                              </div>
+                            ) : organizationTypesError ? (
+                              <div className="py-6 text-center text-sm text-destructive">
+                                Ошибка загрузки типов организаций
+                              </div>
+                            ) : organizationTypes.length === 0 ? (
+                              <div className="py-6 text-center text-sm text-muted-foreground">
+                                Нет доступных типов
+                              </div>
+                            ) : (
+                              organizationTypes.map((type) => (
+                                <SelectItem
+                                  key={type.id}
+                                  value={type.id.toString()}
+                                >
+                                  {type.name}
+                                </SelectItem>
+                              ))
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -329,15 +470,14 @@ export const OrganizationsPage = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Город</FormLabel>
-                        <></>
                         <Select
-                          onValueChange={(value) =>
-                            field.onChange(Number(value))
-                          }
-                          value={
-                            cities.find((city) => city.id === field.value)
-                              ?.name || ""
-                          }
+                          onValueChange={(value) => {
+                            const numValue = Number(value);
+                            if (!isNaN(numValue) && numValue > 0) {
+                              field.onChange(numValue);
+                            }
+                          }}
+                          value={field.value && field.value > 0 ? field.value.toString() : undefined}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -348,7 +488,7 @@ export const OrganizationsPage = () => {
                             {cities.map((city) => (
                               <SelectItem
                                 key={city.id}
-                                value={city.name.toString()}
+                                value={city.id.toString()}
                               >
                                 {city.name}
                               </SelectItem>
@@ -416,6 +556,77 @@ export const OrganizationsPage = () => {
           </Dialog>
         </div>
 
+        {/* Фильтры */}
+        <div className="flex flex-wrap items-center gap-4 p-4 border rounded-lg bg-card">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Поиск по названию или адресу..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
+          </div>
+          <Select
+            value={filterTypeId?.toString() || "all"}
+            onValueChange={(value) =>
+              setFilterTypeId(value === "all" ? null : Number(value))
+            }
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Все типы" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все типы организаций</SelectItem>
+              {organizationTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id.toString()}>
+                  {type.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={filterCityId?.toString() || "all"}
+            onValueChange={(value) =>
+              setFilterCityId(value === "all" ? null : Number(value))
+            }
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Все города" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все города</SelectItem>
+              {cities.map((city) => (
+                <SelectItem key={city.id} value={city.id.toString()}>
+                  {city.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {(searchQuery || filterTypeId !== null || filterCityId !== null) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchQuery("");
+                setFilterTypeId(null);
+                setFilterCityId(null);
+              }}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Сбросить
+            </Button>
+          )}
+        </div>
+
         {isLoading ? (
           <div className="text-muted-foreground">Загрузка...</div>
         ) : (
@@ -431,17 +642,19 @@ export const OrganizationsPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {organizations.length === 0 ? (
+              {filteredOrganizations.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={6}
                     className="text-center text-muted-foreground"
                   >
-                    Нет организаций
+                    {organizations.length === 0
+                      ? "Нет организаций"
+                      : "Не найдено организаций по заданным фильтрам"}
                   </TableCell>
                 </TableRow>
               ) : (
-                organizations.map((organization) => (
+                filteredOrganizations.map((organization) => (
                   <TableRow key={organization.id}>
                     <TableCell>{organization.id}</TableCell>
                     <TableCell>{organization.name || "-"}</TableCell>
@@ -524,13 +737,12 @@ export const OrganizationsPage = () => {
                       <FormLabel>Тип организации</FormLabel>
                       <Select
                         onValueChange={(value) => {
-                          console.log(
-                            "[OrganizationsPage] Organization type changed:",
-                            value
-                          );
-                          field.onChange(Number(value));
+                          const numValue = Number(value);
+                          if (!isNaN(numValue) && numValue > 0) {
+                            field.onChange(numValue);
+                          }
                         }}
-                        value={field.value?.toString()}
+                        value={field.value && field.value > 0 ? field.value.toString() : undefined}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -538,14 +750,28 @@ export const OrganizationsPage = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {organizationTypes.map((type) => (
-                            <SelectItem
-                              key={type.id}
-                              value={type.id.toString()}
-                            >
-                              {type.name}
-                            </SelectItem>
-                          ))}
+                          {isLoadingTypes ? (
+                            <div className="py-6 text-center text-sm text-muted-foreground">
+                              Загрузка...
+                            </div>
+                          ) : organizationTypesError ? (
+                            <div className="py-6 text-center text-sm text-destructive">
+                              Ошибка загрузки типов организаций
+                            </div>
+                          ) : organizationTypes.length === 0 ? (
+                            <div className="py-6 text-center text-sm text-muted-foreground">
+                              Нет доступных типов
+                            </div>
+                          ) : (
+                            organizationTypes.map((type) => (
+                              <SelectItem
+                                key={type.id}
+                                value={type.id.toString()}
+                              >
+                                {type.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -560,13 +786,12 @@ export const OrganizationsPage = () => {
                       <FormLabel>Город</FormLabel>
                       <Select
                         onValueChange={(value) => {
-                          console.log(
-                            "[OrganizationsPage] City changed:",
-                            value
-                          );
-                          field.onChange(Number(value));
+                          const numValue = Number(value);
+                          if (!isNaN(numValue) && numValue > 0) {
+                            field.onChange(numValue);
+                          }
                         }}
-                        value={field.value?.toString()}
+                        value={field.value && field.value > 0 ? field.value.toString() : undefined}
                       >
                         <FormControl>
                           <SelectTrigger>

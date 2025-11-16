@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useApiQuery, useApiMutation } from '@shared/lib/hooks'
 import { patch, del } from '@shared/lib/api/client'
 import { useQueryClient } from '@tanstack/react-query'
@@ -40,7 +40,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import type { Quest, CreateQuestDto, City } from '@shared/lib/api/types'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, X } from 'lucide-react'
 
 const questSchema = z.object({
   title: z.string().min(1, 'Название обязательно'),
@@ -56,6 +56,9 @@ export const QuestsPage = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingQuest, setEditingQuest] = useState<Quest | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterStatus, setFilterStatus] = useState<string | null>(null)
+  const [filterCityId, setFilterCityId] = useState<number | null>(null)
   const queryClient = useQueryClient()
 
   const { data: cities = [] } = useApiQuery<City[]>(['cities'], '/cities')
@@ -63,6 +66,33 @@ export const QuestsPage = () => {
     ['quests'],
     '/quests'
   )
+
+  // Фильтрация квестов
+  const filteredQuests = useMemo(() => {
+    return quests.filter((quest) => {
+      // Фильтр по поисковому запросу
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        const matchesSearch =
+          quest.title?.toLowerCase().includes(query) ||
+          quest.description?.toLowerCase().includes(query)
+        if (!matchesSearch) return false
+      }
+
+      // Фильтр по статусу
+      if (filterStatus !== null) {
+        if (quest.status !== filterStatus) return false
+      }
+
+      // Фильтр по городу
+      if (filterCityId !== null) {
+        const questCityId = quest.cityId || quest.city?.id
+        if (questCityId !== filterCityId) return false
+      }
+
+      return true
+    })
+  }, [quests, searchQuery, filterStatus, filterCityId])
 
   const createMutation = useApiMutation<Quest, CreateQuestDto>({
     endpoint: '/quests',
@@ -284,6 +314,75 @@ export const QuestsPage = () => {
           </Dialog>
         </div>
 
+        {/* Фильтры */}
+        <div className="flex flex-wrap items-center gap-4 p-4 border rounded-lg bg-card">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Поиск по названию или описанию..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
+          </div>
+          <Select
+            value={filterStatus || 'all'}
+            onValueChange={(value) =>
+              setFilterStatus(value === 'all' ? null : value)
+            }
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Все статусы" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все статусы</SelectItem>
+              <SelectItem value="active">Активные</SelectItem>
+              <SelectItem value="completed">Завершенные</SelectItem>
+              <SelectItem value="archived">Архивные</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={filterCityId?.toString() || 'all'}
+            onValueChange={(value) =>
+              setFilterCityId(value === 'all' ? null : Number(value))
+            }
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Все города" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все города</SelectItem>
+              {cities.map((city) => (
+                <SelectItem key={city.id} value={city.id.toString()}>
+                  {city.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {(searchQuery || filterStatus !== null || filterCityId !== null) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchQuery('')
+                setFilterStatus(null)
+                setFilterCityId(null)
+              }}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Сбросить
+            </Button>
+          )}
+        </div>
+
         {isLoading ? (
           <div className="text-muted-foreground">Загрузка...</div>
         ) : (
@@ -299,14 +398,16 @@ export const QuestsPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {quests.length === 0 ? (
+              {filteredQuests.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    Нет квестов
+                    {quests.length === 0
+                      ? 'Нет квестов'
+                      : 'Не найдено квестов по заданным фильтрам'}
                   </TableCell>
                 </TableRow>
               ) : (
-                quests.map((quest) => (
+                filteredQuests.map((quest) => (
                   <TableRow key={quest.id}>
                     <TableCell>{quest.id}</TableCell>
                     <TableCell>{quest.title}</TableCell>

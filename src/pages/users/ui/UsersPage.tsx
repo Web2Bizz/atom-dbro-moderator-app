@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useApiQuery, useApiMutation } from '@shared/lib/hooks'
 import { patch, del } from '@shared/lib/api/client'
 import { useQueryClient } from '@tanstack/react-query'
@@ -32,7 +32,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import type { User, CreateUserDto } from '@shared/lib/api/types'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, X } from 'lucide-react'
 
 const userSchema = z.object({
   firstName: z.string().min(1, 'Имя обязательно'),
@@ -48,9 +48,23 @@ export const UsersPage = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const queryClient = useQueryClient()
 
   const { data: users = [], isLoading } = useApiQuery<User[]>(['users'], '/users')
+
+  // Фильтрация пользователей
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery) return users
+    const query = searchQuery.toLowerCase()
+    return users.filter(
+      (user) =>
+        user.firstName?.toLowerCase().includes(query) ||
+        user.lastName?.toLowerCase().includes(query) ||
+        user.middleName?.toLowerCase().includes(query) ||
+        user.email?.toLowerCase().includes(query)
+    )
+  }, [users, searchQuery])
 
   const createMutation = useApiMutation<User, CreateUserDto>({
     endpoint: '/users',
@@ -246,6 +260,27 @@ export const UsersPage = () => {
           </Dialog>
         </div>
 
+        {/* Фильтры */}
+        <div className="flex items-center gap-4 p-4 border rounded-lg bg-card">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Поиск по имени, фамилии, отчеству или email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="text-muted-foreground">Загрузка...</div>
         ) : (
@@ -257,25 +292,34 @@ export const UsersPage = () => {
                 <TableHead>Фамилия</TableHead>
                 <TableHead>Отчество</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Опыт</TableHead>
+                <TableHead>Уровень</TableHead>
                 <TableHead className="text-right">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.length === 0 ? (
+              {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    Нет пользователей
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    {users.length === 0
+                      ? 'Нет пользователей'
+                      : 'Не найдено пользователей по заданным фильтрам'}
                   </TableCell>
                 </TableRow>
               ) : (
-                users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>{user.id}</TableCell>
-                    <TableCell>{user.firstName}</TableCell>
-                    <TableCell>{user.lastName}</TableCell>
-                    <TableCell>{user.middleName || '-'}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell className="text-right">
+                filteredUsers.map((user) => {
+                  const experience = user.experience || 0
+                  const level = Math.floor(experience / 100) + 1
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell>{user.id}</TableCell>
+                      <TableCell>{user.firstName}</TableCell>
+                      <TableCell>{user.lastName}</TableCell>
+                      <TableCell>{user.middleName || '-'}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{experience}</TableCell>
+                      <TableCell>{level}</TableCell>
+                      <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
@@ -294,7 +338,8 @@ export const UsersPage = () => {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
+                  )
+                })
               )}
             </TableBody>
           </Table>
