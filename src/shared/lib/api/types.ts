@@ -125,12 +125,16 @@ export interface ContactDto {
 export interface Organization {
   id: number
   name: string
-  organizationTypeId: number
+  organizationTypeId?: number
   organizationType?: {
     id: number
     name: string
   }
-  cityId: number
+  type?: {
+    id: number
+    name: string
+  }
+  cityId?: number
   city?: City
   latitude?: number
   longitude?: number
@@ -144,6 +148,10 @@ export interface Organization {
   gallery?: string[]
   createdAt?: string
   updatedAt?: string
+  helpTypes?: {
+    id: number
+    name: string
+  }[]
 }
 
 export interface CreateOrganizationDto {
