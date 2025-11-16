@@ -68,6 +68,7 @@ export interface User {
   email: string
   role?: string
   experience?: number
+  avatarUrls?: Record<number, string>
   createdAt?: string
   updatedAt?: string
 }

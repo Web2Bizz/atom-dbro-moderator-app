@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useApiQuery, useApiMutation } from '@shared/lib/hooks'
 import { patch, del } from '@shared/lib/api/client'
 import { useQueryClient } from '@tanstack/react-query'
@@ -90,13 +90,23 @@ export const UsersPage = () => {
   const editForm = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
     defaultValues: {
-      firstName: editingUser?.firstName || '',
-      lastName: editingUser?.lastName || '',
-      middleName: editingUser?.middleName || '',
-      email: editingUser?.email || '',
-      password: '',
+      firstName: '',
+      lastName: '',
+      middleName: '',
+      email: '',
     },
   })
+
+  useEffect(() => {
+    if (editingUser) {
+      editForm.reset({
+        firstName: editingUser.firstName,
+        lastName: editingUser.lastName,
+        middleName: editingUser.middleName || '',
+        email: editingUser.email,
+      })
+    }
+  }, [editingUser, editForm])
 
   const handleCreate = (data: UserFormData) => {
     const { password, ...userData } = data
@@ -115,9 +125,6 @@ export const UsersPage = () => {
           lastName: data.lastName,
           middleName: data.middleName,
           email: data.email,
-        }
-        if (data.password) {
-          updateData.password = data.password
         }
         await patch<User>(`/users/${editingUser.id}`, updateData)
         queryClient.invalidateQueries({ queryKey: ['users'] })
@@ -149,8 +156,13 @@ export const UsersPage = () => {
       lastName: user.lastName,
       middleName: user.middleName || '',
       email: user.email,
-      password: '',
     })
+  }
+
+  const getInitials = (user: User) => {
+    const firstLetter = user.lastName?.[0]?.toUpperCase() || ''
+    const secondLetter = user.firstName?.[0]?.toUpperCase() || ''
+    return `${firstLetter}${secondLetter}`
   }
 
   return (
@@ -287,11 +299,13 @@ export const UsersPage = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead></TableHead>
                 <TableHead>ID</TableHead>
                 <TableHead>Имя</TableHead>
                 <TableHead>Фамилия</TableHead>
                 <TableHead>Отчество</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Роль</TableHead>
                 <TableHead>Опыт</TableHead>
                 <TableHead>Уровень</TableHead>
                 <TableHead className="text-right">Действия</TableHead>
@@ -300,7 +314,7 @@ export const UsersPage = () => {
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center text-muted-foreground">
                     {users.length === 0
                       ? 'Нет пользователей'
                       : 'Не найдено пользователей по заданным фильтрам'}
@@ -310,13 +324,28 @@ export const UsersPage = () => {
                 filteredUsers.map((user) => {
                   const experience = user.experience || 0
                   const level = Math.floor(experience / 100) + 1
+                  const avatarUrl = user.avatarUrls?.[5]
                   return (
                     <TableRow key={user.id}>
+                      <TableCell>
+                        {avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt={`${user.firstName} ${user.lastName}`}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                            {getInitials(user)}
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell>{user.id}</TableCell>
                       <TableCell>{user.firstName}</TableCell>
                       <TableCell>{user.lastName}</TableCell>
                       <TableCell>{user.middleName || '-'}</TableCell>
                       <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.role || '-'}</TableCell>
                       <TableCell>{experience}</TableCell>
                       <TableCell>{level}</TableCell>
                       <TableCell className="text-right">
@@ -403,19 +432,6 @@ export const UsersPage = () => {
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input type="email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Новый пароль (оставьте пустым, чтобы не менять)</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
