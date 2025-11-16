@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "3000:80"
+    container_name: atom-dbro-moderator-app
+    restart: unless-stopped
+
