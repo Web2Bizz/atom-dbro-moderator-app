@@ -17,4 +17,4 @@ pnpm-lock.yaml
 .idea
 coverage
 .nyc_output
-
+vite.config.ts

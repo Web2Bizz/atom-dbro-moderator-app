@@ -14,7 +14,8 @@ RUN npm install --force
 COPY . .
 
 # Build the application (skip type checking to avoid linter errors in Docker)
-RUN npm run build
+RUN mv ./vite.config.docker.ts ./vite.config.ts &&\
+    npm run build
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
