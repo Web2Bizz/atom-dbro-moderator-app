@@ -11,6 +11,7 @@ import {
 	Users,
 } from 'lucide-react'
 import * as React from 'react'
+import { Link } from 'react-router-dom'
 
 import { NavDocuments } from '@/components/nav-documents'
 import { NavMain } from '@/components/nav-main'
@@ -145,12 +146,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							asChild
 							className='data-[slot=sidebar-menu-button]:!p-1.5'
 						>
-							<a href='#'>
+							<Link to='/'>
 								<img src='/logo.png' alt='АТОМ ДОБРО' className='size-8' />
 								<span className='text-lg md:text-base font-semibold'>
 									АТОМ ДОБРО
 								</span>
-							</a>
+							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>

@@ -77,10 +77,10 @@ export function NavMain({
 					return (
 						<SidebarMenuItem key={item.title}>
 							<SidebarMenuButton tooltip={item.title} asChild>
-								<a href={item.url}>
+								<Link to={item.url}>
 									{item.icon && <item.icon />}
 									<span>{item.title}</span>
-								</a>
+								</Link>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 					)
