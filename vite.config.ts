@@ -5,7 +5,7 @@ import { defineConfig } from 'vite'
 import { w2bViteFileBasedRouting } from 'w2b-vite-filebased-routing/core'
 
 export default defineConfig({
-	base: '/admin-panel',
+	base: '/admin-panel/',
 	plugins: [react(), w2bViteFileBasedRouting({}), tailwindcss()],
 	resolve: {
 		alias: {
