@@ -6,7 +6,7 @@ import { w2bViteFileBasedRouting } from 'w2b-vite-filebased-routing/core'
 
 export default defineConfig({
 	base: '/admin',
-	plugins: [react(), w2bViteFileBasedRouting(), tailwindcss()],
+	plugins: [react(), w2bViteFileBasedRouting({}), tailwindcss()],
 	resolve: {
 		alias: {
 			'@': path.resolve(__dirname, './src'),
