@@ -1,11 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import App from './app/App.tsx'
+import { RouterProvider } from 'w2b-vite-filebased-routing/react'
+import { Spinner } from './components/ui/spinner'
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+	<StrictMode>
+		<RouterProvider preloader={<Spinner />} />
+	</StrictMode>
 )
-

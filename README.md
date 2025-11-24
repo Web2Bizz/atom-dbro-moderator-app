@@ -1,131 +1,73 @@
-# Atom DBRO Moderator App
+# React + TypeScript + Vite
 
-React приложение с современным стеком технологий и архитектурой Feature-Sliced Design.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Технологический стек
+Currently, two official plugins are available:
 
-- **React 18** - UI библиотека
-- **TypeScript** - типизация
-- **Vite** - сборщик и dev-сервер
-- **TanStack Query** - управление серверным состоянием
-- **React Router** - маршрутизация
-- **React Hook Form** - работа с формами
-- **Tailwind CSS** - стилизация
-- **SCSS** - препроцессор стилей
-- **Shadcn/ui** - UI компоненты
-- **Feature-Sliced Design** - архитектура проекта
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Структура проекта (FSD)
+## React Compiler
 
-```
-src/
-├── app/          # Инициализация приложения, провайдеры, роутинг
-├── pages/        # Страницы приложения
-├── widgets/      # Крупные самостоятельные блоки интерфейса
-├── features/     # Бизнес-фичи приложения
-├── entities/     # Бизнес-сущности
-└── shared/       # Переиспользуемые модули (UI компоненты, утилиты)
-```
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Установка и запуск
+## Expanding the ESLint configuration
 
-### Установка зависимостей
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-```bash
-npm install
-```
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-### Запуск dev-сервера
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-```bash
-npm run dev
-```
-
-### Сборка для production
-
-```bash
-npm run build
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-### Просмотр production сборки
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```bash
-npm run preview
-```
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-## Алиасы путей
-
-Проект использует алиасы для удобного импорта:
-
-- `@app/*` - слой приложения
-- `@pages/*` - страницы
-- `@widgets/*` - виджеты
-- `@features/*` - фичи
-- `@entities/*` - сущности
-- `@shared/*` - общие модули
-- `@/*` - корень src
-
-Пример использования:
-
-```typescript
-import { Button } from '@shared/ui/button'
-import { HomePage } from '@pages/home'
-```
-
-## Shadcn/ui
-
-Компоненты shadcn/ui находятся в `src/shared/ui/`. Для добавления новых компонентов используйте:
-
-```bash
-npx shadcn-ui@latest add [component-name]
-```
-
-## Тема
-
-Приложение использует только светлую тему (dark mode отключен).
-
-## Docker
-
-### Production сборка
-
-Сборка и запуск production версии через Docker:
-
-```bash
-# Сборка образа
-docker build -f docker/Dockerfile -t atom-dbro-moderator-app .
-
-# Запуск контейнера
-docker run -p 3000:80 atom-dbro-moderator-app
-```
-
-Или через docker-compose:
-
-```bash
-docker-compose up --build
-```
-
-Приложение будет доступно по адресу: http://localhost:3000
-
-### Development режим
-
-Для разработки с hot-reload:
-
-```bash
-docker build -f docker/Dockerfile.dev -t atom-dbro-moderator-app:dev .
-docker run -p 5173:5173 -v $(pwd):/app atom-dbro-moderator-app:dev
-```
-
-Или через docker-compose (добавьте сервис в docker-compose.yml):
-
-```yaml
-services:
-  app-dev:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.dev
-    ports:
-      - "5173:5173"
-    volumes:
-      - .:/app
-      - /app/node_modules
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
