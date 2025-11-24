@@ -43,7 +43,7 @@
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.17",
     "vaul": "^1.1.2",
-    "w2b-vite-filebased-routing": "^1.0.0",
+    "w2b-vite-filebased-routing": "^1.1.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {
