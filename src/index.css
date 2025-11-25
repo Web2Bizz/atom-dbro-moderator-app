@@ -96,13 +96,13 @@
 	--input: oklch(0.25 0.01 285);
 	--ring: oklch(0.52 0.22 264);
 	--chart-1: oklch(0.75 0.12 251);
-	--chart-2: oklch(0.60 0.18 259);
+	--chart-2: oklch(0.6 0.18 259);
 	--chart-3: oklch(0.52 0.22 262);
-	--chart-4: oklch(0.48 0.20 264);
+	--chart-4: oklch(0.48 0.2 264);
 	--chart-5: oklch(0.42 0.18 265);
 	--sidebar: oklch(0.22 0.008 285);
 	--sidebar-foreground: oklch(0.92 0.002 285);
-	--sidebar-primary: oklch(0.58 0.20 259);
+	--sidebar-primary: oklch(0.58 0.2 259);
 	--sidebar-primary-foreground: oklch(0.95 0.002 285);
 	--sidebar-accent: oklch(0.28 0.008 285);
 	--sidebar-accent-foreground: oklch(0.92 0.002 285);
@@ -116,5 +116,48 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+	}
+}
+
+@layer utilities {
+	@keyframes spin-spinner {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	@keyframes wobble-1 {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(0.8);
+		}
+	}
+
+	@keyframes wobble-2 {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(0.9);
+		}
+	}
+
+	.animate-spin-spinner {
+		animation: spin-spinner 0.8s linear infinite;
+	}
+
+	.animate-wobble-1 {
+		animation: wobble-1 0.8s ease-in-out infinite;
+	}
+
+	.animate-wobble-2 {
+		animation: wobble-2 0.8s ease-in-out infinite;
 	}
 }

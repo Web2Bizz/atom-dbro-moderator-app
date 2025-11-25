@@ -9,19 +9,27 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 	// useAuth теперь возвращает null вместо ошибки при HMR
 	const auth = useAuth()
 
-	// Если контекст еще не готов (например, при HMR), не рендерим ничего
-	if (!auth) {
-		return null
-	}
+	// Извлекаем значения с дефолтными значениями для случая, когда auth === null
+	const isAuthenticated = auth?.isAuthenticated ?? false
+	const isLoading = auth?.isLoading ?? true
 
-	const { isAuthenticated, isLoading } = auth
-
+	// ВСЕ хуки должны вызываться ДО любых условных возвратов
 	useEffect(() => {
+		// Если контекст еще не готов (например, при HMR), ничего не делаем
+		if (!auth) {
+			return
+		}
+
 		// Не делаем редирект пока идет проверка токена
 		if (!isLoading && !isAuthenticated) {
 			globalThis.location.href = '/admin-panel/login'
 		}
-	}, [isAuthenticated, isLoading])
+	}, [auth, isAuthenticated, isLoading])
+
+	// Если контекст еще не готов (например, при HMR), не рендерим ничего
+	if (!auth) {
+		return null
+	}
 
 	// Пока идет проверка, не показываем ничего
 	if (isLoading) {
