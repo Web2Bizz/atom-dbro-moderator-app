@@ -10,54 +10,86 @@ import {
 	DrawerHeader,
 	DrawerTitle,
 } from '@/components/ui/drawer'
+import {
+	useDeleteUserMutation,
+	useGetUsersQuery,
+	useUpdateUserV2Mutation,
+	type User as ApiUser,
+} from '@/store/entities'
 import { DeleteUserDialog } from './delete-user-dialog'
 import { type User } from './types'
 import { UserForm } from './user-form'
 import { UsersTable } from './users-table'
 
-// Моковые данные для демонстрации
-const mockUsers: User[] = [
-	{
-		id: 1,
-		firstName: 'Дениска',
-		lastName: 'Мясников',
-		middleName: 'Сергеевич',
-		email: 'qwerty@yandex.ru',
-		avatarUrls: {
-			'9': 'http://82.202.140.37:12745/api/v1/3c69184c-336f-404d-bbaa-7bc1e3355f76?size=9',
-		},
-		role: 'пользователь',
-		level: 1,
-		experience: 50,
-		questId: null,
-		organisationId: null,
-		createdAt: '2025-11-16T17:27:20.462Z',
-		updatedAt: '2025-11-16T17:27:52.730Z',
-	},
-	{
-		id: 2,
-		firstName: 'Иван',
-		lastName: 'Иванов',
-		middleName: 'Иванович',
-		email: 'ivan@example.com',
-		avatarUrls: {},
-		role: 'модератор',
-		level: 5,
-		experience: 250,
-		questId: 1,
-		organisationId: 1,
-		createdAt: '2025-11-15T10:00:00.000Z',
-		updatedAt: '2025-11-15T10:00:00.000Z',
-	},
-]
+// Преобразуем пользователя из API в формат компонента
+const mapApiUserToComponentUser = (
+	apiUser: ApiUser & { role?: string }
+): User => {
+	// Преобразуем роль из API формата в читаемый формат
+	// API может возвращать как "USER"/"ADMIN", так и "пользователь"/"администратор"
+	const roleMap: Record<string, string> = {
+		USER: 'пользователь',
+		ADMIN: 'администратор',
+		пользователь: 'пользователь',
+		администратор: 'администратор',
+	}
+
+	// Определяем роль: если это английский формат - преобразуем, иначе используем как есть
+	let role = 'пользователь'
+	if (apiUser.role) {
+		const normalizedRole = apiUser.role.toUpperCase()
+		if (normalizedRole === 'USER' || normalizedRole === 'ADMIN') {
+			// Английский формат - преобразуем
+			role = roleMap[apiUser.role] || 'пользователь'
+		} else {
+			// Уже русский формат - используем как есть
+			role = roleMap[apiUser.role] || apiUser.role || 'пользователь'
+		}
+	}
+
+	return {
+		id: apiUser.id,
+		firstName: apiUser.firstName,
+		lastName: apiUser.lastName,
+		middleName: apiUser.middleName || '',
+		email: apiUser.email,
+		avatarUrls: apiUser.avatarUrls || {},
+		role,
+		level: apiUser.level || 1,
+		experience: apiUser.experience || 0,
+		questId: null, // API не возвращает questId
+		organisationId: apiUser.organisationId || null,
+		createdAt: apiUser.createdAt || new Date().toISOString(),
+		updatedAt: apiUser.updatedAt || new Date().toISOString(),
+	}
+}
 
 export function UsersPageContent() {
-	const [users, setUsers] = React.useState<User[]>(mockUsers)
+	const {
+		data: usersData,
+		isLoading: isLoadingUsers,
+		error: usersError,
+	} = useGetUsersQuery()
+
+	const [updateUser] = useUpdateUserV2Mutation()
+	const [deleteUser] = useDeleteUserMutation()
+
+	const users = React.useMemo(() => {
+		if (!usersData) return []
+		return usersData.map(mapApiUserToComponentUser)
+	}, [usersData])
+
 	const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
 	const [editingUser, setEditingUser] = React.useState<User | undefined>()
 	const [isLoading, setIsLoading] = React.useState(false)
 	const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
 	const [userToDelete, setUserToDelete] = React.useState<User | null>(null)
+
+	React.useEffect(() => {
+		if (usersError) {
+			toast.error('Ошибка при загрузке пользователей')
+		}
+	}, [usersError])
 
 	const handleEdit = (user: User) => {
 		setEditingUser(user)
@@ -74,9 +106,7 @@ export function UsersPageContent() {
 
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 500))
-			setUsers(prev => prev.filter(user => user.id !== userToDelete.id))
+			await deleteUser(userToDelete.id).unwrap()
 			toast.success('Пользователь успешно удален')
 			setDeleteDialogOpen(false)
 			setUserToDelete(null)
@@ -92,43 +122,43 @@ export function UsersPageContent() {
 		lastName: string
 		middleName?: string
 		email: string
-		avatarUrl?: string
 		role: string
-		level: number
-		experience: number
-		questId: number | null
-		organisationId: number | null
 	}) => {
+		if (!editingUser) return
+
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 1000))
+			// Преобразуем роль обратно в формат API
+			const roleMap: Record<string, 'USER' | 'ADMIN'> = {
+				пользователь: 'USER',
+				администратор: 'ADMIN',
+			}
 
-			// Преобразуем avatarUrl обратно в avatarUrls объект
-			const avatarUrls: Record<string, string> = data.avatarUrl
-				? { '9': data.avatarUrl }
-				: {}
+			// Подготавливаем данные для обновления
+			const updateData: {
+				firstName: string
+				lastName: string
+				middleName?: string
+				email: string
+				role?: 'USER' | 'ADMIN'
+			} = {
+				firstName: data.firstName,
+				lastName: data.lastName,
+				middleName: data.middleName,
+				email: data.email,
+			}
 
-			// Обновление существующего пользователя
-			if (!editingUser) return
+			// Добавляем роль
+			if (data.role) {
+				updateData.role = roleMap[data.role] || 'USER'
+			}
 
-			const now = new Date().toISOString()
-			setUsers(prev =>
-				prev.map(user =>
-					user.id === editingUser.id
-						? {
-								...data,
-								middleName: data.middleName || '',
-								id: editingUser.id,
-								avatarUrls,
-								createdAt: user.createdAt,
-								updatedAt: now,
-						  }
-						: user
-				)
-			)
+			await updateUser({
+				id: editingUser.id,
+				data: updateData,
+			}).unwrap()
+
 			toast.success('Пользователь успешно обновлен')
-
 			setIsDrawerOpen(false)
 			setEditingUser(undefined)
 		} catch {
@@ -178,11 +208,33 @@ export function UsersPageContent() {
 			</Drawer>
 
 			<div className='rounded-lg border bg-card p-4 shadow-sm sm:p-6'>
-				<UsersTable
-					users={users}
-					onEdit={handleEdit}
-					onDelete={handleDeleteClick}
-				/>
+				{(() => {
+					if (isLoadingUsers) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-muted-foreground'>
+									Загрузка пользователей...
+								</p>
+							</div>
+						)
+					}
+					if (usersError) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-destructive'>
+									Ошибка при загрузке пользователей
+								</p>
+							</div>
+						)
+					}
+					return (
+						<UsersTable
+							users={users}
+							onEdit={handleEdit}
+							onDelete={handleDeleteClick}
+						/>
+					)
+				})()}
 			</div>
 
 			<DeleteUserDialog

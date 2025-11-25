@@ -8,6 +8,7 @@ export interface User {
 	email: string
 	avatar?: string
 	avatarUrls?: Record<string, string>
+	role?: string // API может возвращать 'USER', 'ADMIN' или русские названия ('пользователь', 'администратор')
 	organisationId?: number | null
 	level?: number
 	experience?: number

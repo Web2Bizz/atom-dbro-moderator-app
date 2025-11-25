@@ -1,11 +1,8 @@
 import {
 	Building,
-	Database,
-	FileText,
 	HelpCircle,
 	LayoutDashboard,
 	Map,
-	FileText as ReportIcon,
 	Settings,
 	Trophy,
 	Users,
@@ -13,7 +10,6 @@ import {
 import * as React from 'react'
 import { Link } from 'react-router-dom'
 
-import { NavDocuments } from '@/components/nav-documents'
 import { NavMain } from '@/components/nav-main'
 import {
 	Sidebar,
@@ -117,23 +113,23 @@ const data = {
 		},
 	],
 
-	documents: [
-		{
-			name: 'Data Library',
-			url: '/data-library',
-			icon: Database,
-		},
-		{
-			name: 'Reports',
-			url: '/reports',
-			icon: ReportIcon,
-		},
-		{
-			name: 'Word Assistant',
-			url: '/word-assistant',
-			icon: FileText,
-		},
-	],
+	// documents: [
+	// 	{
+	// 		name: 'Data Library',
+	// 		url: '/data-library',
+	// 		icon: Database,
+	// 	},
+	// 	{
+	// 		name: 'Reports',
+	// 		url: '/reports',
+	// 		icon: ReportIcon,
+	// 	},
+	// 	{
+	// 		name: 'Word Assistant',
+	// 		url: '/word-assistant',
+	// 		icon: FileText,
+	// 	},
+	// ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -158,7 +154,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</SidebarHeader>
 			<SidebarContent>
 				<NavMain items={data.navMain} />
-				<NavDocuments items={data.documents} />
+				{/* <NavDocuments items={data.documents} /> */}
 			</SidebarContent>
 		</Sidebar>
 	)

@@ -182,6 +182,33 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 		[onEdit, onDelete]
 	)
 
+	// Кастомная функция фильтрации - ищет только по ФИО и email
+	const globalFilterFn = (row: any, _columnId: string, filterValue: string) => {
+		if (!filterValue) return true
+
+		const user = row.original as User
+		const searchValue = filterValue.toLowerCase()
+
+		// Ищем по имени, фамилии, отчеству и email
+		const firstName = (user.firstName || '').toLowerCase()
+		const lastName = (user.lastName || '').toLowerCase()
+		const middleName = (user.middleName || '').toLowerCase()
+		const email = (user.email || '').toLowerCase()
+
+		// Полное ФИО
+		const fullName = `${lastName} ${firstName} ${middleName}`
+			.trim()
+			.toLowerCase()
+
+		return (
+			firstName.includes(searchValue) ||
+			lastName.includes(searchValue) ||
+			middleName.includes(searchValue) ||
+			fullName.includes(searchValue) ||
+			email.includes(searchValue)
+		)
+	}
+
 	const table = useReactTable({
 		data: users,
 		columns,
@@ -192,7 +219,7 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
-		globalFilterFn: 'includesString',
+		globalFilterFn,
 		state: {
 			sorting,
 			rowSelection,
