@@ -2,6 +2,7 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import { persistReducer, persistStore } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import { authService } from './entities/auth'
+import { userService } from './entities/user'
 
 const persistConfig = {
 	key: 'root',
@@ -13,6 +14,7 @@ const persistConfig = {
 
 const rootReducer = combineReducers({
 	[authService.reducerPath]: authService.reducer,
+	[userService.reducerPath]: userService.reducer,
 })
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)
@@ -32,7 +34,7 @@ export const setupStore = () => {
 					],
 					ignoredPaths: ['_persist'],
 				},
-			}).concat(authService.middleware),
+			}).concat(authService.middleware, userService.middleware),
 	})
 
 	const persistor = persistStore(store)

@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/hooks/use-auth'
 import { useLoginMutation } from '@/store/entities'
-import { saveRefreshToken, saveToken, saveUser } from '@/utils/auth'
+import { saveRefreshToken, saveToken } from '@/utils/auth'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -36,7 +36,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
-	const { isAuthenticated, setIsAuthenticated, setUser } = useAuth()
+	const { isAuthenticated, setIsAuthenticated, setUserIdFromLogin } = useAuth()
 	const [loginMutation, { isLoading: isLoggingIn }] = useLoginMutation()
 	const [showPassword, setShowPassword] = useState(false)
 
@@ -92,10 +92,10 @@ export default function LoginPage() {
 				saveRefreshToken(result.data.refresh_token)
 			}
 
-			// Сохраняем данные пользователя в localStorage и состояние
-			if (result.data.user) {
-				saveUser(result.data.user)
-				setUser(result.data.user)
+			// Сохраняем только ID пользователя для последующей загрузки полных данных
+			if (result.data.user?.id) {
+				const userId = Number.parseInt(result.data.user.id, 10)
+				setUserIdFromLogin(userId)
 			}
 
 			// Устанавливаем статус авторизации

@@ -1,7 +1,5 @@
 // Утилиты для работы с авторизацией
 
-import type { UserShortData } from '@/store/entities/auth/model/type'
-
 /**
  * Сохраняет access token в localStorage
  */
@@ -21,22 +19,13 @@ export function saveRefreshToken(token: string): void {
 }
 
 /**
- * Сохраняет данные пользователя в localStorage
- */
-export function saveUser(user: UserShortData): void {
-	if (globalThis.window !== undefined) {
-		localStorage.setItem('user', JSON.stringify(user))
-	}
-}
-
-/**
- * Удаляет токены и данные пользователя из localStorage
+ * Удаляет токены и ID пользователя из localStorage
  */
 export function removeToken(): void {
 	if (globalThis.window !== undefined) {
 		localStorage.removeItem('authToken')
 		localStorage.removeItem('refreshToken')
-		localStorage.removeItem('user')
+		localStorage.removeItem('userId')
 	}
 }
 
@@ -56,23 +45,6 @@ export function getToken(): string | null {
 export function getRefreshToken(): string | null {
 	if (globalThis.window !== undefined) {
 		return localStorage.getItem('refreshToken')
-	}
-	return null
-}
-
-/**
- * Получает данные пользователя из localStorage
- */
-export function getUser(): UserShortData | null {
-	if (globalThis.window !== undefined) {
-		const userStr = localStorage.getItem('user')
-		if (userStr) {
-			try {
-				return JSON.parse(userStr) as UserShortData
-			} catch {
-				return null
-			}
-		}
 	}
 	return null
 }
