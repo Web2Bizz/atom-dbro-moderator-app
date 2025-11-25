@@ -1,6 +1,5 @@
 'use client'
 
-import { MoreVertical, Pencil, Trash2, Trophy } from 'lucide-react'
 import {
 	type ColumnDef,
 	flexRender,
@@ -11,6 +10,7 @@ import {
 	type SortingState,
 	useReactTable,
 } from '@tanstack/react-table'
+import { MoreVertical, Pencil, Trash2, Trophy } from 'lucide-react'
 import * as React from 'react'
 
 import { Badge } from '@/components/ui/badge'
@@ -46,23 +46,28 @@ interface AchievementsTableProps {
 const rarityConfig: Record<string, { label: string; className: string }> = {
 	private: {
 		label: 'Приватное',
-		className: 'bg-gray-500/10 text-gray-600 border-gray-500/20 dark:text-gray-400',
+		className:
+			'bg-gray-500/10 text-gray-600 border-gray-500/20 dark:text-gray-400',
 	},
 	common: {
 		label: 'Обычное',
-		className: 'bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400',
+		className:
+			'bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400',
 	},
 	rare: {
 		label: 'Редкое',
-		className: 'bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400',
+		className:
+			'bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400',
 	},
 	epic: {
 		label: 'Эпическое',
-		className: 'bg-pink-500/10 text-pink-600 border-pink-500/20 dark:text-pink-400',
+		className:
+			'bg-pink-500/10 text-pink-600 border-pink-500/20 dark:text-pink-400',
 	},
 	legendary: {
 		label: 'Легендарное',
-		className: 'bg-orange-500/10 text-orange-600 border-orange-500/20 dark:text-orange-400',
+		className:
+			'bg-orange-500/10 text-orange-600 border-orange-500/20 dark:text-orange-400',
 	},
 }
 
@@ -78,10 +83,12 @@ export function AchievementsTable({
 	const isMobile = useIsMobile()
 
 	const getRarityInfo = (rarity: string) => {
-		return rarityConfig[rarity] || {
-			label: rarity,
-			className: 'bg-muted text-muted-foreground',
-		}
+		return (
+			rarityConfig[rarity] || {
+				label: rarity,
+				className: 'bg-muted text-muted-foreground',
+			}
+		)
 	}
 
 	const columns: ColumnDef<Achievement>[] = React.useMemo(
@@ -207,6 +214,7 @@ export function AchievementsTable({
 				pageSize: 10,
 			},
 		},
+		autoResetPageIndex: false,
 	})
 
 	const filteredAchievements = table
@@ -242,7 +250,10 @@ export function AchievementsTable({
 												<p className='text-sm text-muted-foreground line-clamp-2'>
 													{achievement.description}
 												</p>
-												<Badge variant='outline' className={rarityInfo.className}>
+												<Badge
+													variant='outline'
+													className={rarityInfo.className}
+												>
 													{rarityInfo.label}
 												</Badge>
 											</div>
@@ -258,9 +269,7 @@ export function AchievementsTable({
 													</Button>
 												</DropdownMenuTrigger>
 												<DropdownMenuContent align='end' className='w-40'>
-													<DropdownMenuItem
-														onClick={() => onEdit(achievement)}
-													>
+													<DropdownMenuItem onClick={() => onEdit(achievement)}>
 														<Pencil className='mr-2 size-4' />
 														Редактировать
 													</DropdownMenuItem>
@@ -407,4 +416,3 @@ export function AchievementsTable({
 		</div>
 	)
 }
-

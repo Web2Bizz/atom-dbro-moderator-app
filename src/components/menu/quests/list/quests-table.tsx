@@ -1,6 +1,6 @@
 'use client'
 
-import * as React from 'react'
+import { useIsMobile } from '@/hooks/use-mobile'
 import {
 	type ExpandedState,
 	getCoreRowModel,
@@ -11,13 +11,13 @@ import {
 	type SortingState,
 	useReactTable,
 } from '@tanstack/react-table'
-import { useIsMobile } from '@/hooks/use-mobile'
+import * as React from 'react'
 import { type Quest } from '../types'
-import { createColumns } from './components/table-columns'
 import { QuestsTableDesktop } from './components/quests-table-desktop'
 import { QuestsTableMobile } from './components/quests-table-mobile'
-import { TableSearch } from './components/table-search'
+import { createColumns } from './components/table-columns'
 import { TablePagination } from './components/table-pagination'
+import { TableSearch } from './components/table-search'
 
 interface QuestsTableProps {
 	quests: Quest[]
@@ -25,11 +25,7 @@ interface QuestsTableProps {
 	onDelete: (quest: Quest) => void
 }
 
-export function QuestsTable({
-	quests,
-	onEdit,
-	onDelete,
-}: QuestsTableProps) {
+export function QuestsTable({ quests, onEdit, onDelete }: QuestsTableProps) {
 	const [sorting, setSorting] = React.useState<SortingState>([])
 	const [rowSelection, setRowSelection] = React.useState({})
 	const [expanded, setExpanded] = React.useState<ExpandedState>({})
@@ -65,6 +61,7 @@ export function QuestsTable({
 				pageSize: 10,
 			},
 		},
+		autoResetPageIndex: false,
 	})
 
 	if (isMobile) {
@@ -75,11 +72,7 @@ export function QuestsTable({
 					onChange={setGlobalFilter}
 					className='w-full'
 				/>
-				<QuestsTableMobile
-					table={table}
-					onEdit={onEdit}
-					onDelete={onDelete}
-				/>
+				<QuestsTableMobile table={table} onEdit={onEdit} onDelete={onDelete} />
 			</div>
 		)
 	}
@@ -100,8 +93,10 @@ export function QuestsTable({
 
 			<QuestsTableDesktop table={table} columns={columns} />
 
-			<TablePagination table={table} className='sm:flex-row sm:items-center sm:justify-between' />
+			<TablePagination
+				table={table}
+				className='sm:flex-row sm:items-center sm:justify-between'
+			/>
 		</div>
 	)
 }
-

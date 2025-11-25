@@ -1,6 +1,5 @@
 'use client'
 
-import { MoreVertical, Pencil, Trash2, Target } from 'lucide-react'
 import {
 	type ColumnDef,
 	flexRender,
@@ -11,6 +10,7 @@ import {
 	type SortingState,
 	useReactTable,
 } from '@tanstack/react-table'
+import { MoreVertical, Pencil, Target, Trash2 } from 'lucide-react'
 import * as React from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -142,6 +142,7 @@ export function QuestCategoriesTable({
 				pageSize: 10,
 			},
 		},
+		autoResetPageIndex: false,
 	})
 
 	const filteredQuestCategories = table
@@ -184,9 +185,7 @@ export function QuestCategoriesTable({
 												</Button>
 											</DropdownMenuTrigger>
 											<DropdownMenuContent align='end' className='w-40'>
-												<DropdownMenuItem
-													onClick={() => onEdit(questCategory)}
-												>
+												<DropdownMenuItem onClick={() => onEdit(questCategory)}>
 													<Pencil className='mr-2 size-4' />
 													Редактировать
 												</DropdownMenuItem>
@@ -332,4 +331,3 @@ export function QuestCategoriesTable({
 		</div>
 	)
 }
-

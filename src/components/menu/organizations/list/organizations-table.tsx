@@ -1,6 +1,6 @@
 'use client'
 
-import * as React from 'react'
+import { useIsMobile } from '@/hooks/use-mobile'
 import {
 	type ExpandedState,
 	getCoreRowModel,
@@ -11,13 +11,13 @@ import {
 	type SortingState,
 	useReactTable,
 } from '@tanstack/react-table'
-import { useIsMobile } from '@/hooks/use-mobile'
+import * as React from 'react'
 import { type Organization } from '../types'
-import { createColumns } from './components/table-columns'
 import { OrganizationsTableDesktop } from './components/organizations-table-desktop'
 import { OrganizationsTableMobile } from './components/organizations-table-mobile'
-import { TableSearch } from './components/table-search'
+import { createColumns } from './components/table-columns'
 import { TablePagination } from './components/table-pagination'
+import { TableSearch } from './components/table-search'
 
 interface OrganizationsTableProps {
 	organizations: Organization[]
@@ -65,6 +65,7 @@ export function OrganizationsTable({
 				pageSize: 10,
 			},
 		},
+		autoResetPageIndex: false,
 	})
 
 	if (isMobile) {
@@ -100,8 +101,10 @@ export function OrganizationsTable({
 
 			<OrganizationsTableDesktop table={table} columns={columns} />
 
-			<TablePagination table={table} className='sm:flex-row sm:items-center sm:justify-between' />
+			<TablePagination
+				table={table}
+				className='sm:flex-row sm:items-center sm:justify-between'
+			/>
 		</div>
 	)
 }
-

@@ -1,12 +1,6 @@
 'use client'
 
 import {
-	MoreVertical,
-	Pencil,
-	MapPin,
-	Trash2,
-} from 'lucide-react'
-import {
 	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
@@ -16,6 +10,7 @@ import {
 	type SortingState,
 	useReactTable,
 } from '@tanstack/react-table'
+import { MapPin, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import * as React from 'react'
 
 import { Badge } from '@/components/ui/badge'
@@ -172,6 +167,7 @@ export function CitiesTable({ cities, onEdit, onDelete }: CitiesTableProps) {
 				pageSize: 10,
 			},
 		},
+		autoResetPageIndex: false,
 	})
 
 	const filteredCities = table

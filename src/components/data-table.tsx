@@ -18,20 +18,6 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import {
-	ChevronDown,
-	ChevronLeft,
-	ChevronRight,
-	ChevronsLeft,
-	ChevronsRight,
-	CheckCircle2,
-	MoreVertical,
-	GripVertical,
-	Columns,
-	Loader2,
-	Plus,
-	TrendingUp,
-} from 'lucide-react'
-import {
 	type ColumnDef,
 	type ColumnFiltersState,
 	flexRender,
@@ -46,6 +32,20 @@ import {
 	useReactTable,
 	type VisibilityState,
 } from '@tanstack/react-table'
+import {
+	CheckCircle2,
+	ChevronDown,
+	ChevronLeft,
+	ChevronRight,
+	ChevronsLeft,
+	ChevronsRight,
+	Columns,
+	GripVertical,
+	Loader2,
+	MoreVertical,
+	Plus,
+	TrendingUp,
+} from 'lucide-react'
 import * as React from 'react'
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts'
 import { toast } from 'sonner'
@@ -186,9 +186,9 @@ const columns: ColumnDef<z.infer<typeof TableSchema>>[] = [
 		cell: ({ row }) => (
 			<Badge variant='outline' className='text-muted-foreground px-1.5'>
 				{row.original.status === 'Done' ? (
-						<CheckCircle2 className='fill-green-500 dark:fill-green-400' />
+					<CheckCircle2 className='fill-green-500 dark:fill-green-400' />
 				) : (
-						<Loader2 />
+					<Loader2 />
 				)}
 				{row.original.status}
 			</Badge>
@@ -381,6 +381,7 @@ export function DataTable({
 		getSortedRowModel: getSortedRowModel(),
 		getFacetedRowModel: getFacetedRowModel(),
 		getFacetedUniqueValues: getFacetedUniqueValues(),
+		autoResetPageIndex: false,
 	})
 
 	function handleDragEnd(event: DragEndEvent) {
@@ -432,10 +433,10 @@ export function DataTable({
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button variant='outline' size='sm'>
-							<Columns />
+								<Columns />
 								<span className='hidden lg:inline'>Customize Columns</span>
 								<span className='lg:hidden'>Columns</span>
-							<ChevronDown />
+								<ChevronDown />
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align='end' className='w-56'>

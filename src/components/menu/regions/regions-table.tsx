@@ -1,12 +1,6 @@
 'use client'
 
 import {
-	MoreVertical,
-	Pencil,
-	MapPin,
-	Trash2,
-} from 'lucide-react'
-import {
 	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
@@ -16,6 +10,7 @@ import {
 	type SortingState,
 	useReactTable,
 } from '@tanstack/react-table'
+import { MapPin, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import * as React from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -167,6 +162,7 @@ export function RegionsTable({ regions, onEdit, onDelete }: RegionsTableProps) {
 				pageSize: 10,
 			},
 		},
+		autoResetPageIndex: false,
 	})
 
 	const filteredRegions = table

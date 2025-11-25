@@ -1,6 +1,5 @@
 'use client'
 
-import { MoreVertical, Pencil, Trash2, Building2 } from 'lucide-react'
 import {
 	type ColumnDef,
 	flexRender,
@@ -11,6 +10,7 @@ import {
 	type SortingState,
 	useReactTable,
 } from '@tanstack/react-table'
+import { Building2, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import * as React from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -142,6 +142,7 @@ export function OrganizationTypesTable({
 				pageSize: 10,
 			},
 		},
+		autoResetPageIndex: false,
 	})
 
 	const filteredOrganizationTypes = table
@@ -332,4 +333,3 @@ export function OrganizationTypesTable({
 		</div>
 	)
 }
-

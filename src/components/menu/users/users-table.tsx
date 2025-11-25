@@ -1,11 +1,6 @@
 'use client'
 
 import {
-	MoreVertical,
-	Pencil,
-	Trash2,
-} from 'lucide-react'
-import {
 	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
@@ -15,6 +10,7 @@ import {
 	type SortingState,
 	useReactTable,
 } from '@tanstack/react-table'
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import * as React from 'react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -56,7 +52,9 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 	// Функция для получения URL аватара
 	const getAvatarUrl = (avatarUrls: Record<string, string> | undefined) => {
 		if (!avatarUrls) return undefined
-		const sizes = Object.keys(avatarUrls).map(Number).sort((a, b) => b - a)
+		const sizes = Object.keys(avatarUrls)
+			.map(Number)
+			.sort((a, b) => b - a)
 		return sizes.length > 0 ? avatarUrls[String(sizes[0])] : undefined
 	}
 
@@ -96,7 +94,9 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 				header: 'Пользователь',
 				cell: ({ row }) => {
 					const user = row.original
-					const fullName = `${user.lastName} ${user.firstName} ${user.middleName || ''}`.trim()
+					const fullName = `${user.lastName} ${user.firstName} ${
+						user.middleName || ''
+					}`.trim()
 					const avatarUrl = getAvatarUrl(user.avatarUrls)
 
 					return (
@@ -107,7 +107,9 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 							</Avatar>
 							<div>
 								<div className='font-medium'>{fullName}</div>
-								<div className='text-muted-foreground text-sm'>{user.email}</div>
+								<div className='text-muted-foreground text-sm'>
+									{user.email}
+								</div>
 							</div>
 						</div>
 					)
@@ -201,6 +203,7 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 				pageSize: 10,
 			},
 		},
+		autoResetPageIndex: false,
 	})
 
 	const filteredUsers = table
@@ -220,7 +223,9 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 				<div className='space-y-3'>
 					{filteredUsers.length > 0 ? (
 						filteredUsers.map(user => {
-							const fullName = `${user.lastName} ${user.firstName} ${user.middleName || ''}`.trim()
+							const fullName = `${user.lastName} ${user.firstName} ${
+								user.middleName || ''
+							}`.trim()
 							const avatarUrl = getAvatarUrl(user.avatarUrls)
 							const createdAt = new Date(user.createdAt)
 
@@ -235,8 +240,12 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 														<AvatarFallback>{getInitials(user)}</AvatarFallback>
 													</Avatar>
 													<div>
-														<h3 className='font-semibold text-base'>{fullName}</h3>
-														<p className='text-muted-foreground text-sm'>{user.email}</p>
+														<h3 className='font-semibold text-base'>
+															{fullName}
+														</h3>
+														<p className='text-muted-foreground text-sm'>
+															{user.email}
+														</p>
 													</div>
 												</div>
 												<div className='space-y-1 text-sm'>
@@ -247,7 +256,9 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 														</Badge>
 													</div>
 													<div className='flex items-center gap-2'>
-														<span className='text-muted-foreground'>Уровень:</span>
+														<span className='text-muted-foreground'>
+															Уровень:
+														</span>
 														<span className='font-medium'>{user.level}</span>
 													</div>
 													<div className='flex items-center gap-2'>
@@ -255,7 +266,9 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 														<span>{user.experience}</span>
 													</div>
 													<div className='flex items-center gap-2'>
-														<span className='text-muted-foreground'>Создан:</span>
+														<span className='text-muted-foreground'>
+															Создан:
+														</span>
 														<span>{createdAt.toLocaleDateString('ru-RU')}</span>
 													</div>
 												</div>
@@ -419,4 +432,3 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 		</div>
 	)
 }
-
