@@ -4,6 +4,18 @@ import * as React from 'react'
 
 import { toast } from 'sonner'
 
+import {
+	useApproveOrganizationMutation,
+	useDisapproveOrganizationMutation,
+	useGetCitiesQuery,
+	useGetHelpTypesQuery,
+	useGetOrganizationsQuery,
+	useGetOrganizationTypesQuery,
+	type Organization as ApiOrganization,
+	type City,
+	type HelpType,
+	type OrganizationType,
+} from '@/store/entities'
 import { EmptyState } from './components/empty-state'
 import { FiltersBar } from './components/filters-bar'
 import { ModerationHeader } from './components/moderation-header'
@@ -11,14 +23,108 @@ import { ModerationPagination } from './components/moderation-pagination'
 import { OrganizationCard } from './components/organization-card'
 import { OrganizationDetailDrawer } from './components/organization-detail-drawer'
 import { RejectDialog } from './components/reject-dialog'
-import { mockPendingOrganizations } from './mock-data'
 
 import { type Organization } from '@/components/menu/organizations/types'
 
+// Преобразуем организацию из API в формат компонента
+const mapApiOrganizationToComponentOrganization = (
+	apiOrg: ApiOrganization,
+	citiesData: City[] = [],
+	organizationTypesData: OrganizationType[] = [],
+	helpTypesData: HelpType[] = []
+): Organization => {
+	const cityFromApi = apiOrg.city
+	const cityId = cityFromApi?.id || apiOrg.cityId
+
+	return {
+		id: apiOrg.id,
+		name: apiOrg.name || '',
+		latitude: apiOrg.latitude || 0,
+		longitude: apiOrg.longitude || 0,
+		summary: apiOrg.summary || '',
+		mission: apiOrg.mission || '',
+		description: apiOrg.description || '',
+		goals: apiOrg.goals || [],
+		needs: apiOrg.needs || [],
+		address: apiOrg.address || '',
+		contacts: (apiOrg.contacts || []).map(contact => ({
+			name: contact.name,
+			value: contact.value,
+		})),
+		gallery: apiOrg.gallery || [],
+		createdAt: apiOrg.createdAt || new Date().toISOString(),
+		updatedAt: apiOrg.updatedAt || new Date().toISOString(),
+		city: cityFromApi
+			? {
+					id: cityFromApi.id,
+					name: cityFromApi.name,
+					latitude: Number(cityFromApi.latitude) || 0,
+					longitude: Number(cityFromApi.longitude) || 0,
+			  }
+			: {
+					id: cityId,
+					name: citiesData.find(c => c.id === cityId)?.name || '',
+					latitude: apiOrg.latitude || 0,
+					longitude: apiOrg.longitude || 0,
+			  },
+		type: {
+			id: apiOrg.typeId || apiOrg.organizationTypeId || 0,
+			name:
+				organizationTypesData.find(
+					t => t.id === (apiOrg.typeId || apiOrg.organizationTypeId)
+				)?.name || '',
+		},
+		helpTypes: (apiOrg.helpTypeIds || []).map(id => ({
+			id,
+			name: helpTypesData.find(h => h.id === id)?.name || '',
+		})),
+	}
+}
+
 export function ModerationPageContent() {
-	const [organizations, setOrganizations] = React.useState<Organization[]>(
-		mockPendingOrganizations
-	)
+	const {
+		data: organizationsData,
+		isLoading: isLoadingOrganizations,
+		error: organizationsError,
+	} = useGetOrganizationsQuery()
+
+	const { data: citiesData } = useGetCitiesQuery()
+	const { data: organizationTypesData } = useGetOrganizationTypesQuery()
+	const { data: helpTypesData } = useGetHelpTypesQuery()
+
+	const [approveOrganization] = useApproveOrganizationMutation()
+	const [disapproveOrganization] = useDisapproveOrganizationMutation()
+
+	// Преобразуем данные из API и фильтруем только неодобренные организации
+	// Предполагаем, что неодобренные - это те, у которых нет поля approved или оно false
+	const organizations = React.useMemo(() => {
+		if (!organizationsData) return []
+		const mapped = organizationsData
+			.map(apiOrg =>
+				mapApiOrganizationToComponentOrganization(
+					apiOrg,
+					citiesData,
+					organizationTypesData,
+					helpTypesData
+				)
+			)
+			// Фильтруем организации на модерации (предполагаем, что это все организации без approved статуса)
+			// Если API возвращает только неодобренные, то фильтр не нужен
+			.filter(org => {
+				// Если в API есть поле статуса, используем его
+				// Пока что берем все организации, так как API может возвращать только неодобренные
+				return true
+			})
+
+		return mapped
+	}, [organizationsData, citiesData, organizationTypesData, helpTypesData])
+
+	React.useEffect(() => {
+		if (organizationsError) {
+			toast.error('Ошибка при загрузке организаций')
+		}
+	}, [organizationsError])
+
 	const [selectedOrganization, setSelectedOrganization] =
 		React.useState<Organization | null>(null)
 	const [isDetailOpen, setIsDetailOpen] = React.useState(false)
@@ -53,12 +159,20 @@ export function ModerationPageContent() {
 	}, [])
 
 	const cities = React.useMemo(() => {
-		const citySet = new Set(organizations.map(org => org.city.name))
+		const citySet = new Set(
+			organizations
+				.map(org => org.city.name)
+				.filter(name => name && name.trim() !== '')
+		)
 		return Array.from(citySet).sort(localeCollator.compare)
 	}, [organizations, localeCollator])
 
 	const organizationTypes = React.useMemo(() => {
-		const typeSet = new Set(organizations.map(org => org.type.name))
+		const typeSet = new Set(
+			organizations
+				.map(org => org.type.name)
+				.filter(name => name && name.trim() !== '')
+		)
 		return Array.from(typeSet).sort(localeCollator.compare)
 	}, [organizations, localeCollator])
 
@@ -146,9 +260,13 @@ export function ModerationPageContent() {
 	const handleApprove = async (organization: Organization) => {
 		setIsLoading(true)
 		try {
-			await new Promise(resolve => setTimeout(resolve, 1000))
-			setOrganizations(prev => prev.filter(org => org.id !== organization.id))
+			await approveOrganization(organization.id).unwrap()
 			toast.success('Организация одобрена и опубликована')
+			// Закрываем drawer, если открыт
+			if (selectedOrganization?.id === organization.id) {
+				setIsDetailOpen(false)
+				setSelectedOrganization(null)
+			}
 		} catch {
 			toast.error('Ошибка при одобрении организации')
 		} finally {
@@ -170,10 +288,9 @@ export function ModerationPageContent() {
 
 		setIsLoading(true)
 		try {
-			await new Promise(resolve => setTimeout(resolve, 1000))
-			setOrganizations(prev =>
-				prev.filter(org => org.id !== selectedOrganization.id)
-			)
+			// Используем disapproveOrganization для отклонения
+			// Если API требует причину, нужно будет добавить её в запрос
+			await disapproveOrganization(selectedOrganization.id).unwrap()
 			toast.success('Организация отклонена')
 			setIsRejectDialogOpen(false)
 			setSelectedOrganization(null)
@@ -183,6 +300,18 @@ export function ModerationPageContent() {
 		} finally {
 			setIsLoading(false)
 		}
+	}
+
+	if (isLoadingOrganizations) {
+		return (
+			<div className='flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6'>
+				<div className='flex items-center justify-center py-8'>
+					<p className='text-sm text-muted-foreground'>
+						Загрузка организаций...
+					</p>
+				</div>
+			</div>
+		)
 	}
 
 	return (

@@ -22,18 +22,18 @@ import {
 } from '@/components/ui/select'
 
 interface FiltersBarProps {
-	searchQuery: string
-	onSearchChange: (value: string) => void
-	selectedCity: string
-	onCityChange: (value: string) => void
-	selectedType: string
-	onTypeChange: (value: string) => void
-	sortBy: 'date' | 'name'
-	onSortChange: (value: 'date' | 'name') => void
-	cities: string[]
-	organizationTypes: string[]
-	hasActiveFilters: boolean
-	onClearFilters: () => void
+	readonly searchQuery: string
+	readonly onSearchChange: (value: string) => void
+	readonly selectedCity: string
+	readonly onCityChange: (value: string) => void
+	readonly selectedType: string
+	readonly onTypeChange: (value: string) => void
+	readonly sortBy: 'date' | 'name'
+	readonly onSortChange: (value: 'date' | 'name') => void
+	readonly cities: string[]
+	readonly organizationTypes: string[]
+	readonly hasActiveFilters: boolean
+	readonly onClearFilters: () => void
 }
 
 export function FiltersBar({
@@ -116,11 +116,13 @@ export function FiltersBar({
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value='all'>Все города</SelectItem>
-										{cities.map(city => (
-											<SelectItem key={city} value={city}>
-												{city}
-											</SelectItem>
-										))}
+										{cities
+											.filter(city => city && city.trim() !== '')
+											.map(city => (
+												<SelectItem key={city} value={city}>
+													{city}
+												</SelectItem>
+											))}
 									</SelectContent>
 								</Select>
 							</div>
@@ -133,11 +135,13 @@ export function FiltersBar({
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value='all'>Все типы</SelectItem>
-										{organizationTypes.map(type => (
-											<SelectItem key={type} value={type}>
-												{type}
-											</SelectItem>
-										))}
+										{organizationTypes
+											.filter(type => type && type.trim() !== '')
+											.map(type => (
+												<SelectItem key={type} value={type}>
+													{type}
+												</SelectItem>
+											))}
 									</SelectContent>
 								</Select>
 							</div>
@@ -186,11 +190,13 @@ export function FiltersBar({
 					</SelectTrigger>
 					<SelectContent>
 						<SelectItem value='all'>Все города</SelectItem>
-						{cities.map(city => (
-							<SelectItem key={city} value={city}>
-								{city}
-							</SelectItem>
-						))}
+						{cities
+							.filter(city => city && city.trim() !== '')
+							.map(city => (
+								<SelectItem key={city} value={city}>
+									{city}
+								</SelectItem>
+							))}
 					</SelectContent>
 				</Select>
 
@@ -200,11 +206,13 @@ export function FiltersBar({
 					</SelectTrigger>
 					<SelectContent>
 						<SelectItem value='all'>Все типы</SelectItem>
-						{organizationTypes.map(type => (
-							<SelectItem key={type} value={type}>
-								{type}
-							</SelectItem>
-						))}
+						{organizationTypes
+							.filter(type => type && type.trim() !== '')
+							.map(type => (
+								<SelectItem key={type} value={type}>
+									{type}
+								</SelectItem>
+							))}
 					</SelectContent>
 				</Select>
 
