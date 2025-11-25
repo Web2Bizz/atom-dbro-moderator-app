@@ -1,7 +1,13 @@
 import { baseQueryWithReauth } from '@/store/baseQueryWithReauth'
 import { createApi } from '@reduxjs/toolkit/query/react'
 import type { City } from '../city/model/type'
-import type { Region, RegionListResponse, RegionResponse } from './type'
+import type {
+	CreateRegionRequest,
+	Region,
+	RegionListResponse,
+	RegionResponse,
+	UpdateRegionRequest,
+} from './type'
 
 export const regionService = createApi({
 	reducerPath: 'regionApi',
@@ -38,6 +44,56 @@ export const regionService = createApi({
 			providesTags: (result, error, id) => [{ type: 'Region', id }],
 		}),
 
+		// POST /v1/regions - Создать регион
+		createRegion: builder.mutation<Region, CreateRegionRequest>({
+			query: data => ({
+				url: '/v1/regions',
+				method: 'POST',
+				body: data,
+			}),
+			transformResponse: (response: RegionResponse | Region) => {
+				if ('data' in response) {
+					return response.data
+				}
+				return response
+			},
+			invalidatesTags: ['Region'],
+		}),
+
+		// PATCH /v1/regions/{id} - Обновить регион
+		updateRegion: builder.mutation<
+			Region,
+			{ id: number; data: UpdateRegionRequest }
+		>({
+			query: ({ id, data }) => ({
+				url: `/v1/regions/${id}`,
+				method: 'PATCH',
+				body: data,
+			}),
+			transformResponse: (response: RegionResponse | Region) => {
+				if ('data' in response) {
+					return response.data
+				}
+				return response
+			},
+			invalidatesTags: (result, error, { id }) => [
+				{ type: 'Region', id },
+				'Region',
+			],
+		}),
+
+		// DELETE /v1/regions/{id} - Удалить регион
+		deleteRegion: builder.mutation<void, number>({
+			query: id => ({
+				url: `/v1/regions/${id}`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: (result, error, id) => [
+				{ type: 'Region', id },
+				'Region',
+			],
+		}),
+
 		// GET /v1/regions/{id}/cities - Получить все города региона
 		getCitiesByRegion: builder.query<City[], number>({
 			query: id => ({
@@ -50,10 +106,7 @@ export const regionService = createApi({
 				}
 				return response.data || []
 			},
-			providesTags: (result, error, id) => [
-				{ type: 'Region', id },
-				'Region',
-			],
+			providesTags: (result, error, id) => [{ type: 'Region', id }, 'Region'],
 		}),
 	}),
 })
@@ -61,6 +114,8 @@ export const regionService = createApi({
 export const {
 	useGetRegionsQuery,
 	useGetRegionByIdQuery,
+	useCreateRegionMutation,
+	useUpdateRegionMutation,
+	useDeleteRegionMutation,
 	useGetCitiesByRegionQuery,
 } = regionService
-

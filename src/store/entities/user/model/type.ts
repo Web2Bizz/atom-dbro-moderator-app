@@ -16,12 +16,33 @@ export interface User {
 }
 
 // Типы для запросов
+export interface CreateUserRequest {
+	firstName: string
+	lastName: string
+	middleName?: string
+	email: string
+	password: string
+	role?: 'USER' | 'ADMIN'
+	organisationId?: number | null
+}
+
 export interface UpdateUserRequest {
 	firstName?: string
 	lastName?: string
 	middleName?: string
 	email?: string
 	avatarUrls?: Record<string, string>
+	role?: 'USER' | 'ADMIN'
+	organisationId?: number | null
+}
+
+export interface UpdateUserV2Request {
+	firstName?: string
+	lastName?: string
+	middleName?: string
+	email?: string
+	avatarUrl?: string
+	role?: 'USER' | 'ADMIN'
 	organisationId?: number | null
 }
 
@@ -43,4 +64,3 @@ export interface UserResponse {
 export interface ChangePasswordResponse {
 	message: string
 }
-

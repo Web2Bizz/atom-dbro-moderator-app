@@ -13,7 +13,13 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from '@/components/ui/drawer'
-import { useGetCitiesQuery, useGetRegionsQuery } from '@/store/entities'
+import {
+	useCreateCityMutation,
+	useDeleteCityMutation,
+	useGetCitiesQuery,
+	useGetRegionsQuery,
+	useUpdateCityMutation,
+} from '@/store/entities'
 import { CitiesTable } from './cities-table'
 import { CityForm } from './city-form'
 import { DeleteCityDialog } from './delete-city-dialog'
@@ -60,6 +66,10 @@ export function CitiesPageContent() {
 		}))
 	}, [regionsData])
 
+	const [createCity] = useCreateCityMutation()
+	const [updateCity] = useUpdateCityMutation()
+	const [deleteCity] = useDeleteCityMutation()
+
 	const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
 	const [editingCity, setEditingCity] = React.useState<City | undefined>()
 	const [isLoading, setIsLoading] = React.useState(false)
@@ -98,8 +108,8 @@ export function CitiesPageContent() {
 
 		setIsLoading(true)
 		try {
-			// API не поддерживает удаление городов
-			toast.error('Удаление городов через API не поддерживается')
+			await deleteCity(cityToDelete.id).unwrap()
+			toast.success('Город успешно удален')
 			setDeleteDialogOpen(false)
 			setCityToDelete(null)
 		} catch {
@@ -109,12 +119,29 @@ export function CitiesPageContent() {
 		}
 	}
 
-	const handleSubmit = async (_data: CityFormData) => {
+	const handleSubmit = async (data: CityFormData) => {
 		setIsLoading(true)
 		try {
-			// API не поддерживает создание/обновление городов
-			const action = editingCity ? 'Обновление' : 'Создание'
-			toast.error(`${action} городов через API не поддерживается`)
+			if (editingCity) {
+				await updateCity({
+					id: editingCity.id,
+					data: {
+						name: data.name,
+						latitude: data.latitude,
+						longitude: data.longitude,
+						regionId: data.regionId,
+					},
+				}).unwrap()
+				toast.success('Город успешно обновлен')
+			} else {
+				await createCity({
+					name: data.name,
+					latitude: data.latitude,
+					longitude: data.longitude,
+					regionId: data.regionId,
+				}).unwrap()
+				toast.success('Город успешно создан')
+			}
 			setIsDrawerOpen(false)
 			setEditingCity(undefined)
 		} catch {

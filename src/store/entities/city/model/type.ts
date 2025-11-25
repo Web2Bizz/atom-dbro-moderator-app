@@ -22,6 +22,20 @@ export interface GetCitiesParams {
 	regionId?: number
 }
 
+export interface CreateCityRequest {
+	name: string
+	latitude: number
+	longitude: number
+	regionId: number
+}
+
+export interface UpdateCityRequest {
+	name?: string
+	latitude?: number
+	longitude?: number
+	regionId?: number
+}
+
 // Типы для ответов API
 export interface CityListResponse {
 	data: City[]
@@ -31,4 +45,3 @@ export interface CityListResponse {
 export interface CityResponse {
 	data: City
 }
-

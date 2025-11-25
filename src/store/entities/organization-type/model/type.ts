@@ -7,6 +7,15 @@ export interface OrganizationType {
 	updatedAt?: string
 }
 
+// Типы для запросов
+export interface CreateOrganizationTypeRequest {
+	name: string
+}
+
+export interface UpdateOrganizationTypeRequest {
+	name?: string
+}
+
 // Типы для ответов API
 export interface OrganizationTypeListResponse {
 	data: OrganizationType[]
@@ -16,4 +25,3 @@ export interface OrganizationTypeListResponse {
 export interface OrganizationTypeResponse {
 	data: OrganizationType
 }
-

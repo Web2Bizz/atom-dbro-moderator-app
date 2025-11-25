@@ -1,9 +1,11 @@
 import { baseQueryWithReauth } from '@/store/baseQueryWithReauth'
 import { createApi } from '@reduxjs/toolkit/query/react'
 import type {
+	CreateOrganizationTypeRequest,
 	OrganizationType,
 	OrganizationTypeListResponse,
 	OrganizationTypeResponse,
+	UpdateOrganizationTypeRequest,
 } from './type'
 
 export const organizationTypeService = createApi({
@@ -34,7 +36,9 @@ export const organizationTypeService = createApi({
 				url: `/v1/organization-types/${id}`,
 				method: 'GET',
 			}),
-			transformResponse: (response: OrganizationTypeResponse | OrganizationType) => {
+			transformResponse: (
+				response: OrganizationTypeResponse | OrganizationType
+			) => {
 				if ('data' in response) {
 					return response.data
 				}
@@ -42,11 +46,70 @@ export const organizationTypeService = createApi({
 			},
 			providesTags: (result, error, id) => [{ type: 'OrganizationType', id }],
 		}),
+
+		// POST /v1/organization-types - Создать тип организации
+		createOrganizationType: builder.mutation<
+			OrganizationType,
+			CreateOrganizationTypeRequest
+		>({
+			query: data => ({
+				url: '/v1/organization-types',
+				method: 'POST',
+				body: data,
+			}),
+			transformResponse: (
+				response: OrganizationTypeResponse | OrganizationType
+			) => {
+				if ('data' in response) {
+					return response.data
+				}
+				return response
+			},
+			invalidatesTags: ['OrganizationType'],
+		}),
+
+		// PATCH /v1/organization-types/{id} - Обновить тип организации
+		updateOrganizationType: builder.mutation<
+			OrganizationType,
+			{ id: number; data: UpdateOrganizationTypeRequest }
+		>({
+			query: ({ id, data }) => ({
+				url: `/v1/organization-types/${id}`,
+				method: 'PATCH',
+				body: data,
+			}),
+			transformResponse: (
+				response: OrganizationTypeResponse | OrganizationType
+			) => {
+				if ('data' in response) {
+					return response.data
+				}
+				return response
+			},
+			invalidatesTags: (result, error, { id }) => [
+				{ type: 'OrganizationType', id },
+				'OrganizationType',
+			],
+		}),
+
+		// DELETE /v1/organization-types/{id} - Удалить тип организации
+		deleteOrganizationType: builder.mutation<void, number>({
+			query: id => ({
+				url: `/v1/organization-types/${id}`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: (result, error, id) => [
+				{ type: 'OrganizationType', id },
+				'OrganizationType',
+			],
+		}),
 	}),
 })
 
 export const {
 	useGetOrganizationTypesQuery,
 	useGetOrganizationTypeByIdQuery,
+	useCreateOrganizationTypeMutation,
+	useUpdateOrganizationTypeMutation,
+	useDeleteOrganizationTypeMutation,
 } = organizationTypeService
-

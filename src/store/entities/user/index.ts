@@ -1,16 +1,20 @@
-export { userService } from './model/user-service'
-export {
-	useGetUsersQuery,
-	useGetUserByIdQuery,
-	useUpdateUserMutation,
-	useChangePasswordMutation,
-} from './model/user-service'
 export type {
-	User,
-	UpdateUserRequest,
 	ChangePasswordRequest,
 	ChangePasswordResponse,
+	CreateUserRequest,
+	UpdateUserRequest,
+	UpdateUserV2Request,
+	User,
 	UserListResponse,
 	UserResponse,
 } from './model/type'
-
+export {
+	useChangePasswordMutation,
+	useCreateUserMutation,
+	useDeleteUserMutation,
+	useGetUserByIdQuery,
+	useGetUsersQuery,
+	useUpdateUserMutation,
+	useUpdateUserV2Mutation,
+	userService,
+} from './model/user-service'

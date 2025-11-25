@@ -7,6 +7,15 @@ export interface Region {
 	updatedAt?: string
 }
 
+// Типы для запросов
+export interface CreateRegionRequest {
+	name: string
+}
+
+export interface UpdateRegionRequest {
+	name?: string
+}
+
 // Типы для ответов API
 export interface RegionListResponse {
 	data: Region[]
@@ -16,4 +25,3 @@ export interface RegionListResponse {
 export interface RegionResponse {
 	data: Region
 }
-

@@ -1,9 +1,17 @@
-export { cityService } from './model/city-service'
-export { useGetCitiesQuery, useGetCityByIdQuery } from './model/city-service'
+export {
+	cityService,
+	useCreateCityMutation,
+	useCreateManyCitiesMutation,
+	useDeleteCityMutation,
+	useGetCitiesQuery,
+	useGetCityByIdQuery,
+	useUpdateCityMutation,
+} from './model/city-service'
 export type {
 	City,
-	GetCitiesParams,
 	CityListResponse,
 	CityResponse,
+	CreateCityRequest,
+	GetCitiesParams,
+	UpdateCityRequest,
 } from './model/type'
-

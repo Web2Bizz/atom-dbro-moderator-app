@@ -1,8 +1,16 @@
-export { regionService } from './model/region-service'
 export {
-	useGetRegionsQuery,
-	useGetRegionByIdQuery,
+	regionService,
+	useCreateRegionMutation,
+	useDeleteRegionMutation,
 	useGetCitiesByRegionQuery,
+	useGetRegionByIdQuery,
+	useGetRegionsQuery,
+	useUpdateRegionMutation,
 } from './model/region-service'
-export type { Region, RegionListResponse, RegionResponse } from './model/type'
-
+export type {
+	CreateRegionRequest,
+	Region,
+	RegionListResponse,
+	RegionResponse,
+	UpdateRegionRequest,
+} from './model/type'

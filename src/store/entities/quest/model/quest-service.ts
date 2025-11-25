@@ -64,7 +64,10 @@ export const questService = createApi({
 		}),
 
 		// GET /api/v2/quests/{id} - Получить квест по ID с информацией об участии (v2)
-		getQuestByIdV2: builder.query<Quest & { isParticipating?: boolean }, number>({
+		getQuestByIdV2: builder.query<
+			Quest & { isParticipating?: boolean },
+			number
+		>({
 			query: id => ({
 				url: `/v2/quests/${id}`,
 				method: 'GET',
@@ -95,7 +98,10 @@ export const questService = createApi({
 		}),
 
 		// PATCH /v1/quests/{id} - Обновить квест
-		updateQuest: builder.mutation<Quest, { id: number; data: UpdateQuestRequest }>({
+		updateQuest: builder.mutation<
+			Quest,
+			{ id: number; data: UpdateQuestRequest }
+		>({
 			query: ({ id, data }) => ({
 				url: `/v1/quests/${id}`,
 				method: 'PATCH',
@@ -119,10 +125,7 @@ export const questService = createApi({
 				url: `/v1/quests/${id}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, id) => [
-				{ type: 'Quest', id },
-				'Quest',
-			],
+			invalidatesTags: (result, error, id) => [{ type: 'Quest', id }, 'Quest'],
 		}),
 
 		// POST /v1/quests/{id}/join/{userId} - Присоединиться к квесту
@@ -155,22 +158,25 @@ export const questService = createApi({
 				url: `/v1/quests/${id}/complete`,
 				method: 'POST',
 			}),
-			invalidatesTags: (result, error, id) => [
-				{ type: 'Quest', id },
-				'Quest',
-			],
+			invalidatesTags: (result, error, id) => [{ type: 'Quest', id }, 'Quest'],
 		}),
 
-		// POST /v1/quests/{id}/archive - Архивировать квест
+		// PATCH /v1/quests/{id}/archive - Архивировать квест
 		archiveQuest: builder.mutation<void, number>({
 			query: id => ({
 				url: `/v1/quests/${id}/archive`,
-				method: 'POST',
+				method: 'PATCH',
 			}),
-			invalidatesTags: (result, error, id) => [
-				{ type: 'Quest', id },
-				'Quest',
-			],
+			invalidatesTags: (result, error, id) => [{ type: 'Quest', id }, 'Quest'],
+		}),
+
+		// PATCH /v1/quests/{id}/unarchive - Разархивировать квест
+		unarchiveQuest: builder.mutation<void, number>({
+			query: id => ({
+				url: `/v1/quests/${id}/unarchive`,
+				method: 'PATCH',
+			}),
+			invalidatesTags: (result, error, id) => [{ type: 'Quest', id }, 'Quest'],
 		}),
 
 		// GET /v1/quests/user/{userId} - Получить квесты пользователя
@@ -246,9 +252,9 @@ export const {
 	useLeaveQuestMutation,
 	useCompleteQuestMutation,
 	useArchiveQuestMutation,
+	useUnarchiveQuestMutation,
 	useGetUserQuestsQuery,
 	useGetAvailableQuestsQuery,
 	useGetQuestUsersQuery,
 	useUpdateQuestRequirementMutation,
 } = questService
-

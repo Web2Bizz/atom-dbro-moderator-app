@@ -13,7 +13,12 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from '@/components/ui/drawer'
-import { useGetRegionsQuery } from '@/store/entities'
+import {
+	useCreateRegionMutation,
+	useDeleteRegionMutation,
+	useGetRegionsQuery,
+	useUpdateRegionMutation,
+} from '@/store/entities'
 import { DeleteRegionDialog } from './delete-region-dialog'
 import { RegionForm } from './region-form'
 import { RegionsTable } from './regions-table'
@@ -35,6 +40,10 @@ export function RegionsPageContent() {
 			updatedAt: region.updatedAt || new Date().toISOString(),
 		}))
 	}, [regionsData])
+
+	const [createRegion] = useCreateRegionMutation()
+	const [updateRegion] = useUpdateRegionMutation()
+	const [deleteRegion] = useDeleteRegionMutation()
 
 	const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
 	const [editingRegion, setEditingRegion] = React.useState<Region | undefined>()
@@ -70,8 +79,8 @@ export function RegionsPageContent() {
 
 		setIsLoading(true)
 		try {
-			// API не поддерживает удаление регионов
-			toast.error('Удаление регионов через API не поддерживается')
+			await deleteRegion(regionToDelete.id).unwrap()
+			toast.success('Регион успешно удален')
 			setDeleteDialogOpen(false)
 			setRegionToDelete(null)
 		} catch {
@@ -81,12 +90,19 @@ export function RegionsPageContent() {
 		}
 	}
 
-	const handleSubmit = async (_data: RegionFormData) => {
+	const handleSubmit = async (data: RegionFormData) => {
 		setIsLoading(true)
 		try {
-			// API не поддерживает создание/обновление регионов
-			const action = editingRegion ? 'Обновление' : 'Создание'
-			toast.error(`${action} регионов через API не поддерживается`)
+			if (editingRegion) {
+				await updateRegion({
+					id: editingRegion.id,
+					data: { name: data.name },
+				}).unwrap()
+				toast.success('Регион успешно обновлен')
+			} else {
+				await createRegion({ name: data.name }).unwrap()
+				toast.success('Регион успешно создан')
+			}
 			setIsDrawerOpen(false)
 			setEditingRegion(undefined)
 		} catch {
