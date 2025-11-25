@@ -1,8 +1,8 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/use-auth'
 import { useLoginMutation } from '@/store/entities'
-import { saveRefreshToken, saveToken } from '@/utils/auth'
+import { saveRefreshToken, saveToken, saveUser } from '@/utils/auth'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -92,12 +92,10 @@ export default function LoginPage() {
 				saveRefreshToken(result.data.refresh_token)
 			}
 
-			// Сохраняем данные пользователя
+			// Сохраняем данные пользователя в localStorage и состояние
 			if (result.data.user) {
-				setUser({
-					id: result.data.user.id,
-					email: result.data.user.email,
-				})
+				saveUser(result.data.user)
+				setUser(result.data.user)
 			}
 
 			// Устанавливаем статус авторизации

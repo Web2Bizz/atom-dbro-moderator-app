@@ -1,22 +1,26 @@
 import { useValidateTokenMutation } from '@/store/entities'
-import { getToken, removeToken } from '@/utils/auth'
-import type { ReactNode } from 'react'
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import type { UserShortData } from '@/store/entities/auth/model/type'
+import { getToken, getUser, removeToken } from '@/utils/auth'
+import type { Context, ReactNode } from 'react'
+import { createContext, useEffect, useMemo, useRef, useState } from 'react'
 
 interface AuthContextType {
 	isAuthenticated: boolean
 	setIsAuthenticated: (value: boolean) => void
-	user: { email: string; id: string } | null
-	setUser: (user: { email: string; id: string } | null) => void
+	user: UserShortData | null
+	setUser: (user: UserShortData | null) => void
 	isLoading: boolean
 	logout: () => void
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined)
+export const AuthContext = createContext<AuthContextType | undefined>(
+	undefined
+) as Context<AuthContextType>
 
 export function AuthProvider({ children }: { readonly children: ReactNode }) {
+	// Загружаем пользователя из localStorage при инициализации
+	const [user, setUser] = useState<UserShortData | null>(() => getUser())
 	const [isAuthenticated, setIsAuthenticated] = useState(false)
-	const [user, setUser] = useState<{ email: string; id: string } | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
 	const [validateToken] = useValidateTokenMutation()
 	const hasValidatedRef = useRef(false)
@@ -31,7 +35,13 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 
 		const checkAuth = async () => {
 			const token = getToken()
-			
+			const savedUser = getUser()
+
+			// Если есть сохраненный пользователь, загружаем его
+			if (savedUser) {
+				setUser(savedUser)
+			}
+
 			if (!token) {
 				setIsLoading(false)
 				return
@@ -44,33 +54,12 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 				if (result.data) {
 					setIsAuthenticated(true)
 				}
-				// 400 - Доступ разрешен только администраторам
-				else if (
-					result.error &&
-					('status' in result.error && result.error.status === 400)
-				) {
-					// Пользователь не является администратором
-					removeToken()
-					setIsAuthenticated(false)
-				}
-				// 401 - Токен не валиден
-				else if (
-					result.error &&
-					('status' in result.error
-						? result.error.status === 401
-						: 'data' in result.error &&
-						  result.error.data &&
-						  typeof result.error.data === 'object' &&
-						  'statusCode' in result.error.data &&
-						  result.error.data.statusCode === 401)
-				) {
-					removeToken()
-					setIsAuthenticated(false)
-				}
-				// Другие ошибки
+				// 400, 401 или другие ошибки - токен не валиден или нет доступа
 				else if (result.error) {
+					// Удаляем токены и данные пользователя при любой ошибке
 					removeToken()
 					setIsAuthenticated(false)
+					setUser(null)
 				}
 			} catch (error) {
 				// При ошибке сети или другой ошибке считаем токен невалидным
@@ -109,12 +98,4 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 	)
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth() {
-	const context = useContext(AuthContext)
-	if (context === undefined) {
-		throw new Error('useAuth must be used within an AuthProvider')
-	}
-	return context
 }
