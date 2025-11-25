@@ -36,7 +36,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
-	const { isAuthenticated, setIsAuthenticated, setUserIdFromLogin } = useAuth()
+	const auth = useAuth()
 	const [loginMutation, { isLoading: isLoggingIn }] = useLoginMutation()
 	const [showPassword, setShowPassword] = useState(false)
 
@@ -48,12 +48,23 @@ export default function LoginPage() {
 		},
 	})
 
+	// Если контекст еще не готов (например, при HMR), показываем загрузку
+	// Используем безопасные значения по умолчанию
+	const isAuthenticated = auth?.isAuthenticated ?? false
+	const setIsAuthenticated = auth?.setIsAuthenticated ?? (() => {})
+	const setUserIdFromLogin = auth?.setUserIdFromLogin ?? (() => {})
+
 	// Если пользователь уже авторизован, перенаправляем на главную
 	useEffect(() => {
 		if (isAuthenticated) {
 			globalThis.location.href = '/admin-panel/'
 		}
 	}, [isAuthenticated])
+
+	// Если контекст еще не готов (например, при HMR), показываем загрузку
+	if (!auth) {
+		return null
+	}
 
 	if (isAuthenticated) {
 		return null

@@ -14,7 +14,14 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 export function HeaderUser() {
-	const { logout, user } = useAuth()
+	const auth = useAuth()
+
+	// Если контекст еще не готов (например, при HMR), не рендерим ничего
+	if (!auth) {
+		return null
+	}
+
+	const { logout, user } = auth
 
 	if (!user) {
 		return null

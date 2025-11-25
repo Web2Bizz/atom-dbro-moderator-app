@@ -6,7 +6,15 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-	const { isAuthenticated, isLoading } = useAuth()
+	// useAuth теперь возвращает null вместо ошибки при HMR
+	const auth = useAuth()
+
+	// Если контекст еще не готов (например, при HMR), не рендерим ничего
+	if (!auth) {
+		return null
+	}
+
+	const { isAuthenticated, isLoading } = auth
 
 	useEffect(() => {
 		// Не делаем редирект пока идет проверка токена
