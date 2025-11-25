@@ -13,14 +13,29 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from '@/components/ui/drawer'
-import { mockRegions } from '../shared/mock-data'
+import { useGetRegionsQuery } from '@/store/entities'
 import { DeleteRegionDialog } from './delete-region-dialog'
 import { RegionForm } from './region-form'
 import { RegionsTable } from './regions-table'
 import { type Region, type RegionFormData } from './types'
 
 export function RegionsPageContent() {
-	const [regions, setRegions] = React.useState<Region[]>(mockRegions)
+	const {
+		data: regionsData,
+		isLoading: isLoadingRegions,
+		error: regionsError,
+	} = useGetRegionsQuery()
+
+	const regions = React.useMemo(() => {
+		if (!regionsData) return []
+		return regionsData.map(region => ({
+			id: region.id,
+			name: region.name,
+			createdAt: region.createdAt || new Date().toISOString(),
+			updatedAt: region.updatedAt || new Date().toISOString(),
+		}))
+	}, [regionsData])
+
 	const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
 	const [editingRegion, setEditingRegion] = React.useState<Region | undefined>()
 	const [isLoading, setIsLoading] = React.useState(false)
@@ -28,6 +43,12 @@ export function RegionsPageContent() {
 	const [regionToDelete, setRegionToDelete] = React.useState<Region | null>(
 		null
 	)
+
+	React.useEffect(() => {
+		if (regionsError) {
+			toast.error('Ошибка при загрузке регионов')
+		}
+	}, [regionsError])
 
 	const handleCreate = () => {
 		setEditingRegion(undefined)
@@ -49,10 +70,8 @@ export function RegionsPageContent() {
 
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 500))
-			setRegions(prev => prev.filter(region => region.id !== regionToDelete.id))
-			toast.success('Регион успешно удален')
+			// API не поддерживает удаление регионов
+			toast.error('Удаление регионов через API не поддерживается')
 			setDeleteDialogOpen(false)
 			setRegionToDelete(null)
 		} catch {
@@ -62,47 +81,17 @@ export function RegionsPageContent() {
 		}
 	}
 
-	const handleSubmit = async (data: RegionFormData) => {
+	const handleSubmit = async (_data: RegionFormData) => {
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 1000))
-
-			if (editingRegion) {
-				// Обновление существующего региона
-				const now = new Date().toISOString()
-				setRegions(prev =>
-					prev.map(region =>
-						region.id === editingRegion.id
-							? {
-									...data,
-									id: editingRegion.id,
-									createdAt: region.createdAt,
-									updatedAt: now,
-							  }
-							: region
-					)
-				)
-				toast.success('Регион успешно обновлен')
-			} else {
-				// Создание нового региона
-				const now = new Date().toISOString()
-				const newRegion: Region = {
-					...data,
-					id: Math.max(...regions.map(r => r.id), 0) + 1,
-					createdAt: now,
-					updatedAt: now,
-				}
-				setRegions(prev => [...prev, newRegion])
-				toast.success('Регион успешно создан')
-			}
-
+			// API не поддерживает создание/обновление регионов
+			const action = editingRegion ? 'Обновление' : 'Создание'
+			toast.error(`${action} регионов через API не поддерживается`)
 			setIsDrawerOpen(false)
 			setEditingRegion(undefined)
 		} catch {
-			toast.error(
-				`Ошибка при ${editingRegion ? 'обновлении' : 'создании'} региона`
-			)
+			const action = editingRegion ? 'обновлении' : 'создании'
+			toast.error(`Ошибка при ${action} региона`)
 		} finally {
 			setIsLoading(false)
 		}
@@ -157,11 +146,33 @@ export function RegionsPageContent() {
 			</div>
 
 			<div className='rounded-lg border bg-card p-4 shadow-sm sm:p-6'>
-				<RegionsTable
-					regions={regions}
-					onEdit={handleEdit}
-					onDelete={handleDeleteClick}
-				/>
+				{(() => {
+					if (isLoadingRegions) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-muted-foreground'>
+									Загрузка регионов...
+								</p>
+							</div>
+						)
+					}
+					if (regionsError) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-destructive'>
+									Ошибка при загрузке регионов
+								</p>
+							</div>
+						)
+					}
+					return (
+						<RegionsTable
+							regions={regions}
+							onEdit={handleEdit}
+							onDelete={handleDeleteClick}
+						/>
+					)
+				})()}
 			</div>
 
 			<DeleteRegionDialog

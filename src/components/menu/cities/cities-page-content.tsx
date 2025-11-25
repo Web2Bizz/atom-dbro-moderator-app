@@ -13,46 +13,70 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from '@/components/ui/drawer'
-import { type Region } from '../regions/types'
-import { mockRegions } from '../shared/mock-data'
+import { useGetCitiesQuery, useGetRegionsQuery } from '@/store/entities'
 import { CitiesTable } from './cities-table'
 import { CityForm } from './city-form'
 import { DeleteCityDialog } from './delete-city-dialog'
 import { type City, type CityFormData } from './types'
 
-// Моковые данные для демонстрации
-const mockCities: City[] = [
-	{
-		id: 1,
-		name: 'Москва',
-		latitude: 55.7558,
-		longitude: 37.6173,
-		regionId: 1,
-	},
-	{
-		id: 2,
-		name: 'Санкт-Петербург',
-		latitude: 59.9343,
-		longitude: 30.3351,
-		regionId: 2,
-	},
-	{
-		id: 3,
-		name: 'Новосибирск',
-		latitude: 55.0084,
-		longitude: 82.9357,
-		regionId: 3,
-	},
-]
-
 export function CitiesPageContent() {
-	const [cities, setCities] = React.useState<City[]>(mockCities)
-	const [regions] = React.useState<Region[]>(mockRegions)
+	const {
+		data: citiesData,
+		isLoading: isLoadingCities,
+		error: citiesError,
+	} = useGetCitiesQuery()
+
+	const { data: regionsData, error: regionsError } = useGetRegionsQuery()
+
+	const cities = React.useMemo(() => {
+		if (!citiesData) return []
+		return citiesData.map(city => {
+			const cityFromApi = city as typeof city & {
+				latitude?: number | string
+				longitude?: number | string
+				region?: { id: number; name: string }
+			}
+			return {
+				id: cityFromApi.id,
+				name: cityFromApi.name,
+				latitude: cityFromApi.latitude
+					? Number.parseFloat(String(cityFromApi.latitude))
+					: 0,
+				longitude: cityFromApi.longitude
+					? Number.parseFloat(String(cityFromApi.longitude))
+					: 0,
+				regionId: cityFromApi.regionId || cityFromApi.region?.id || 0,
+			}
+		})
+	}, [citiesData])
+
+	const regions = React.useMemo(() => {
+		if (!regionsData) return []
+		return regionsData.map(region => ({
+			id: region.id,
+			name: region.name,
+			createdAt: region.createdAt || new Date().toISOString(),
+			updatedAt: region.updatedAt || new Date().toISOString(),
+		}))
+	}, [regionsData])
+
 	const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
 	const [editingCity, setEditingCity] = React.useState<City | undefined>()
 	const [isLoading, setIsLoading] = React.useState(false)
 	const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
 	const [cityToDelete, setCityToDelete] = React.useState<City | null>(null)
+
+	React.useEffect(() => {
+		if (citiesError) {
+			toast.error('Ошибка при загрузке городов')
+		}
+	}, [citiesError])
+
+	React.useEffect(() => {
+		if (regionsError) {
+			toast.error('Ошибка при загрузке регионов')
+		}
+	}, [regionsError])
 
 	const handleCreate = () => {
 		setEditingCity(undefined)
@@ -74,10 +98,8 @@ export function CitiesPageContent() {
 
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 500))
-			setCities(prev => prev.filter(city => city.id !== cityToDelete.id))
-			toast.success('Город успешно удален')
+			// API не поддерживает удаление городов
+			toast.error('Удаление городов через API не поддерживается')
 			setDeleteDialogOpen(false)
 			setCityToDelete(null)
 		} catch {
@@ -87,36 +109,17 @@ export function CitiesPageContent() {
 		}
 	}
 
-	const handleSubmit = async (data: CityFormData) => {
+	const handleSubmit = async (_data: CityFormData) => {
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 1000))
-
-			if (editingCity) {
-				// Обновление существующего города
-				setCities(prev =>
-					prev.map(city =>
-						city.id === editingCity.id ? { ...data, id: editingCity.id } : city
-					)
-				)
-				toast.success('Город успешно обновлен')
-			} else {
-				// Создание нового города
-				const newCity: City = {
-					...data,
-					id: Math.max(...cities.map(c => c.id), 0) + 1,
-				}
-				setCities(prev => [...prev, newCity])
-				toast.success('Город успешно создан')
-			}
-
+			// API не поддерживает создание/обновление городов
+			const action = editingCity ? 'Обновление' : 'Создание'
+			toast.error(`${action} городов через API не поддерживается`)
 			setIsDrawerOpen(false)
 			setEditingCity(undefined)
 		} catch {
-			toast.error(
-				`Ошибка при ${editingCity ? 'обновлении' : 'создании'} города`
-			)
+			const action = editingCity ? 'обновлении' : 'создании'
+			toast.error(`Ошибка при ${action} города`)
 		} finally {
 			setIsLoading(false)
 		}
@@ -172,11 +175,33 @@ export function CitiesPageContent() {
 			</div>
 
 			<div className='rounded-lg border bg-card p-4 shadow-sm sm:p-6'>
-				<CitiesTable
-					cities={cities}
-					onEdit={handleEdit}
-					onDelete={handleDeleteClick}
-				/>
+				{(() => {
+					if (isLoadingCities) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-muted-foreground'>
+									Загрузка городов...
+								</p>
+							</div>
+						)
+					}
+					if (citiesError) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-destructive'>
+									Ошибка при загрузке городов
+								</p>
+							</div>
+						)
+					}
+					return (
+						<CitiesTable
+							cities={cities}
+							onEdit={handleEdit}
+							onDelete={handleDeleteClick}
+						/>
+					)
+				})()}
 			</div>
 
 			<DeleteCityDialog
