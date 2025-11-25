@@ -1,6 +1,7 @@
+import { useValidateTokenMutation } from '@/store/entities'
 import { getToken, removeToken } from '@/utils/auth'
 import type { ReactNode } from 'react'
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 
 interface AuthContextType {
 	isAuthenticated: boolean
@@ -17,14 +18,72 @@ export function AuthProvider({ children }: { readonly children: ReactNode }) {
 	const [isAuthenticated, setIsAuthenticated] = useState(false)
 	const [user, setUser] = useState<{ email: string; id: string } | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
+	const [validateToken] = useValidateTokenMutation()
+	const hasValidatedRef = useRef(false)
 
-	// Проверяем наличие токена при загрузке
+	// Проверяем валидность токена при загрузке
 	useEffect(() => {
-		const token = getToken()
-		if (token) {
-			setIsAuthenticated(true)
+		// Защита от повторного вызова в StrictMode
+		if (hasValidatedRef.current) {
+			return
 		}
-		setIsLoading(false)
+		hasValidatedRef.current = true
+
+		const checkAuth = async () => {
+			const token = getToken()
+			
+			if (!token) {
+				setIsLoading(false)
+				return
+			}
+
+			try {
+				const result = await validateToken()
+
+				// 200 - Токен валиден
+				if (result.data) {
+					setIsAuthenticated(true)
+				}
+				// 400 - Доступ разрешен только администраторам
+				else if (
+					result.error &&
+					('status' in result.error && result.error.status === 400)
+				) {
+					// Пользователь не является администратором
+					removeToken()
+					setIsAuthenticated(false)
+				}
+				// 401 - Токен не валиден
+				else if (
+					result.error &&
+					('status' in result.error
+						? result.error.status === 401
+						: 'data' in result.error &&
+						  result.error.data &&
+						  typeof result.error.data === 'object' &&
+						  'statusCode' in result.error.data &&
+						  result.error.data.statusCode === 401)
+				) {
+					removeToken()
+					setIsAuthenticated(false)
+				}
+				// Другие ошибки
+				else if (result.error) {
+					removeToken()
+					setIsAuthenticated(false)
+				}
+			} catch (error) {
+				// При ошибке сети или другой ошибке считаем токен невалидным
+				console.error('Token validation error:', error)
+				removeToken()
+				setIsAuthenticated(false)
+			} finally {
+				setIsLoading(false)
+			}
+		}
+
+		checkAuth()
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
 	const logout = () => {
