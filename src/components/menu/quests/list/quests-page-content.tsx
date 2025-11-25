@@ -1,29 +1,137 @@
 'use client'
 
+import {
+	useDeleteQuestMutation,
+	useGetCategoriesQuery,
+	useGetCitiesQuery,
+	useGetOrganizationTypesQuery,
+	useGetQuestsQuery,
+	useUpdateQuestMutation,
+	type Quest as ApiQuest,
+} from '@/store/entities'
 import * as React from 'react'
 import { toast } from 'sonner'
-import { QuestsTable } from './quests-table'
-import { QuestEditDrawer } from './components/quest-edit-drawer'
-import { DeleteQuestDialog } from '../delete-quest-dialog'
-import { QuestsHeader } from './components/quests-header'
-import { type Quest, type QuestFormData } from '../types'
-import { type QuestCategory } from '../../quest-categories/types'
 import { type City } from '../../cities/types'
 import { type OrganizationType } from '../../organizations/types'
-import {
-	mockQuests,
-	mockQuestCategories,
-	mockCities,
-	mockOrganizationTypes,
-} from './mock-data'
+import { type QuestCategory } from '../../quest-categories/types'
+import { DeleteQuestDialog } from '../delete-quest-dialog'
+import { type Quest, type QuestFormData } from '../types'
+import { QuestEditDrawer } from './components/quest-edit-drawer'
+import { QuestsHeader } from './components/quests-header'
+import { QuestsTable } from './quests-table'
+
+// Преобразуем квест из API в формат компонента
+const mapApiQuestToComponentQuest = (
+	apiQuest: ApiQuest,
+	citiesData: City[] = [],
+	organizationTypesData: OrganizationType[] = [],
+	categoriesData: QuestCategory[] = []
+): Quest => {
+	const city = citiesData.find(c => c.id === apiQuest.cityId) ?? apiQuest.city
+	const organizationType =
+		organizationTypesData.find(ot => ot.id === apiQuest.organizationTypeId) ??
+		apiQuest.organizationType
+	const categories = apiQuest.categoryIds
+		? categoriesData.filter(c => apiQuest.categoryIds?.includes(c.id))
+		: apiQuest.categories ?? []
+
+	return {
+		id: apiQuest.id,
+		title: apiQuest.title,
+		description: apiQuest.description || '',
+		status: apiQuest.status || 'active',
+		experienceReward: apiQuest.experienceReward,
+		achievementId: apiQuest.achievementId || null,
+		ownerId: (apiQuest as any).ownerId || 0,
+		cityId: apiQuest.cityId,
+		organizationTypeId: apiQuest.organizationTypeId || 0,
+		latitude:
+			typeof apiQuest.latitude === 'number'
+				? String(apiQuest.latitude)
+				: apiQuest.latitude ?? '',
+		longitude:
+			typeof apiQuest.longitude === 'number'
+				? String(apiQuest.longitude)
+				: apiQuest.longitude ?? '',
+		address: apiQuest.address || '',
+		contacts: apiQuest.contacts || [],
+		coverImage: apiQuest.coverImage || null,
+		gallery: apiQuest.gallery || [],
+		steps: (apiQuest.steps || []).map(step => ({
+			title: step.title,
+			status: step.status || 'pending',
+			progress: step.progress || 0,
+			description: step.description || '',
+		})),
+		createdAt: apiQuest.createdAt || new Date().toISOString(),
+		updatedAt: apiQuest.updatedAt || new Date().toISOString(),
+		city: city
+			? {
+					id: city.id,
+					name: city.name,
+					latitude:
+						typeof city.latitude === 'string'
+							? Number.parseFloat(city.latitude)
+							: city.latitude ?? 0,
+					longitude:
+						typeof city.longitude === 'string'
+							? Number.parseFloat(city.longitude)
+							: city.longitude ?? 0,
+					regionId: city.regionId ?? 0,
+			  }
+			: undefined,
+		organizationType: organizationType
+			? {
+					id: organizationType.id,
+					name: organizationType.name,
+			  }
+			: undefined,
+		categories: categories.map(cat => ({
+			id: cat.id,
+			name: cat.name,
+			recordStatus: 'CREATED' as const,
+			createdAt: cat.createdAt ?? new Date().toISOString(),
+			updatedAt: cat.updatedAt ?? new Date().toISOString(),
+		})),
+	}
+}
 
 export function QuestsPageContent() {
-	const [quests, setQuests] = React.useState<Quest[]>(mockQuests)
-	const [questCategories] = React.useState<QuestCategory[]>(mockQuestCategories)
-	const [cities] = React.useState<City[]>(mockCities)
-	const [organizationTypes] = React.useState<OrganizationType[]>(
-		mockOrganizationTypes
-	)
+	const {
+		data: questsData,
+		isLoading: isLoadingQuests,
+		error: questsError,
+	} = useGetQuestsQuery()
+
+	const { data: categoriesData, isLoading: isLoadingCategories } =
+		useGetCategoriesQuery()
+
+	const { data: citiesData, isLoading: isLoadingCities } = useGetCitiesQuery()
+
+	const { data: organizationTypesData, isLoading: isLoadingOrganizationTypes } =
+		useGetOrganizationTypesQuery()
+
+	const [updateQuest] = useUpdateQuestMutation()
+	const [deleteQuest] = useDeleteQuestMutation()
+
+	const quests = React.useMemo(() => {
+		if (!questsData) return []
+		return questsData.map(apiQuest =>
+			mapApiQuestToComponentQuest(
+				apiQuest,
+				citiesData,
+				organizationTypesData,
+				categoriesData
+			)
+		)
+	}, [questsData, citiesData, organizationTypesData, categoriesData])
+
+	React.useEffect(() => {
+		if (questsError) {
+			toast.error('Ошибка при загрузке квестов')
+		}
+	}, [questsError])
+
 	const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
 	const [editingQuest, setEditingQuest] = React.useState<Quest | undefined>()
 	const [isLoading, setIsLoading] = React.useState(false)
@@ -45,9 +153,7 @@ export function QuestsPageContent() {
 
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 500))
-			setQuests(prev => prev.filter(q => q.id !== questToDelete.id))
+			await deleteQuest(questToDelete.id).unwrap()
 			toast.success('Квест успешно удален')
 			setDeleteDialogOpen(false)
 			setQuestToDelete(null)
@@ -59,54 +165,28 @@ export function QuestsPageContent() {
 	}
 
 	const handleSubmit = async (data: QuestFormData) => {
+		if (!editingQuest) {
+			toast.error('Ошибка: квест не найден')
+			return
+		}
+
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 1000))
+			await updateQuest({
+				id: editingQuest.id,
+				data: {
+					title: data.title,
+					description: data.description || undefined,
+					status: data.status as ApiQuest['status'],
+				},
+			}).unwrap()
 
-			const selectedCategories = questCategories.filter(c =>
-				data.categoryIds?.includes(c.id)
-			)
-			const selectedCity = cities.find(c => c.id === data.cityId)
-			const selectedOrganizationType = organizationTypes.find(
-				t => t.id === data.organizationTypeId
-			)
-
-			if (!selectedCategories.length) {
-				toast.error('Ошибка: не найдены категории')
-				return
-			}
-
-			if (!editingQuest) {
-				toast.error('Ошибка: квест не найден')
-				return
-			}
-
-			// Обновление существующего квеста
-			const now = new Date().toISOString()
-			setQuests(prev =>
-				prev.map(q =>
-					q.id === editingQuest.id
-						? {
-								...data,
-								id: editingQuest.id,
-								categories: selectedCategories,
-								city: selectedCity,
-								organizationType: selectedOrganizationType,
-								createdAt: q.createdAt,
-								updatedAt: now,
-						  }
-						: q
-				)
-			)
 			toast.success('Квест успешно обновлен')
 
 			setIsDrawerOpen(false)
 			setEditingQuest(undefined)
 		} catch {
-			toast.error(
-				`Ошибка при ${editingQuest ? 'обновлении' : 'создании'} квеста`
-			)
+			toast.error('Ошибка при обновлении квеста')
 		} finally {
 			setIsLoading(false)
 		}
@@ -125,20 +205,44 @@ export function QuestsPageContent() {
 				open={isDrawerOpen}
 				onOpenChange={setIsDrawerOpen}
 				quest={editingQuest}
-				questCategories={questCategories}
-				cities={cities}
-				organizationTypes={organizationTypes}
 				onSubmit={handleSubmit}
 				onCancel={handleCancel}
 				isLoading={isLoading}
 			/>
 
 			<div className='rounded-lg border bg-card p-4 shadow-sm sm:p-6'>
-				<QuestsTable
-					quests={quests}
-					onEdit={handleEdit}
-					onDelete={handleDeleteClick}
-				/>
+				{(() => {
+					if (
+						isLoadingQuests ||
+						isLoadingCategories ||
+						isLoadingCities ||
+						isLoadingOrganizationTypes
+					) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-muted-foreground'>
+									Загрузка квестов...
+								</p>
+							</div>
+						)
+					}
+					if (questsError) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-destructive'>
+									Ошибка при загрузке квестов
+								</p>
+							</div>
+						)
+					}
+					return (
+						<QuestsTable
+							quests={quests}
+							onEdit={handleEdit}
+							onDelete={handleDeleteClick}
+						/>
+					)
+				})()}
 			</div>
 
 			<DeleteQuestDialog
@@ -151,4 +255,3 @@ export function QuestsPageContent() {
 		</div>
 	)
 }
-
