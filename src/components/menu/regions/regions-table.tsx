@@ -151,7 +151,26 @@ export function RegionsTable({ regions, onEdit, onDelete }: RegionsTableProps) {
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
-		globalFilterFn: 'includesString',
+		globalFilterFn: (row, columnId, filterValue) => {
+			const search = String(filterValue).toLowerCase()
+			const name = String(row.getValue('name') || '').toLowerCase()
+			const createdAt = row.getValue('createdAt')
+				? new Date(row.getValue('createdAt') as string)
+						.toLocaleDateString('ru-RU')
+						.toLowerCase()
+				: ''
+			const updatedAt = row.getValue('updatedAt')
+				? new Date(row.getValue('updatedAt') as string)
+						.toLocaleDateString('ru-RU')
+						.toLowerCase()
+				: ''
+
+			return (
+				name.includes(search) ||
+				createdAt.includes(search) ||
+				updatedAt.includes(search)
+			)
+		},
 		state: {
 			sorting,
 			rowSelection,

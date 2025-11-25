@@ -156,7 +156,20 @@ export function CitiesTable({ cities, onEdit, onDelete }: CitiesTableProps) {
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
-		globalFilterFn: 'includesString',
+		globalFilterFn: (row, columnId, filterValue) => {
+			const search = String(filterValue).toLowerCase()
+			const name = String(row.getValue('name') || '').toLowerCase()
+			const latitude = String(row.getValue('latitude') || '').toLowerCase()
+			const longitude = String(row.getValue('longitude') || '').toLowerCase()
+			const regionId = String(row.getValue('regionId') || '').toLowerCase()
+
+			return (
+				name.includes(search) ||
+				latitude.includes(search) ||
+				longitude.includes(search) ||
+				regionId.includes(search)
+			)
+		},
 		state: {
 			sorting,
 			rowSelection,
