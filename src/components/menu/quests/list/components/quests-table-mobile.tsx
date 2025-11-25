@@ -1,13 +1,3 @@
-import * as React from 'react'
-import {
-	ChevronDown,
-	ChevronRight,
-	MoreVertical,
-	Target,
-	Pencil,
-	Trash2,
-} from 'lucide-react'
-import { type Table } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -18,6 +8,16 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { type Table } from '@tanstack/react-table'
+import {
+	ChevronDown,
+	ChevronRight,
+	MoreVertical,
+	Pencil,
+	Target,
+	Trash2,
+} from 'lucide-react'
+import * as React from 'react'
 import { type Quest } from '../../types'
 import { QuestDetailsMobile } from './quest-details-mobile'
 import { TablePagination } from './table-pagination'
@@ -37,15 +37,14 @@ export function QuestsTableMobile({
 		Record<number, boolean>
 	>({})
 
-	const filteredQuests = table
-		.getFilteredRowModel()
-		.rows.map(row => row.original)
+	// Используем getRowModel() вместо getFilteredRowModel() для получения только строк текущей страницы
+	const paginatedQuests = table.getRowModel().rows.map(row => row.original)
 
 	return (
 		<div className='space-y-4'>
 			<div className='space-y-3'>
-				{filteredQuests.length > 0 ? (
-					filteredQuests.map(quest => {
+				{paginatedQuests.length > 0 ? (
+					paginatedQuests.map(quest => {
 						const isExpanded = mobileExpanded[quest.id] || false
 
 						return (
@@ -145,4 +144,3 @@ export function QuestsTableMobile({
 		</div>
 	)
 }
-

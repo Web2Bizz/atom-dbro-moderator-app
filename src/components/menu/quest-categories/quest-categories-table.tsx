@@ -145,8 +145,9 @@ export function QuestCategoriesTable({
 		autoResetPageIndex: false,
 	})
 
-	const filteredQuestCategories = table
-		.getFilteredRowModel()
+	// Используем getRowModel() вместо getFilteredRowModel() для получения только строк текущей страницы
+	const paginatedQuestCategories = table
+		.getRowModel()
 		.rows.map(row => row.original)
 
 	if (isMobile) {
@@ -160,8 +161,8 @@ export function QuestCategoriesTable({
 				/>
 
 				<div className='space-y-3'>
-					{filteredQuestCategories.length > 0 ? (
-						filteredQuestCategories.map(questCategory => (
+					{paginatedQuestCategories.length > 0 ? (
+						paginatedQuestCategories.map(questCategory => (
 							<Card key={questCategory.id} className='overflow-hidden'>
 								<CardContent className='p-4'>
 									<div className='flex items-start justify-between'>

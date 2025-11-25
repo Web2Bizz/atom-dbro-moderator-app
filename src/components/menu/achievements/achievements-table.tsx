@@ -217,8 +217,9 @@ export function AchievementsTable({
 		autoResetPageIndex: false,
 	})
 
-	const filteredAchievements = table
-		.getFilteredRowModel()
+	// Используем getRowModel() вместо getFilteredRowModel() для получения только строк текущей страницы
+	const paginatedAchievements = table
+		.getRowModel()
 		.rows.map(row => row.original)
 
 	if (isMobile) {
@@ -232,8 +233,8 @@ export function AchievementsTable({
 				/>
 
 				<div className='space-y-3'>
-					{filteredAchievements.length > 0 ? (
-						filteredAchievements.map(achievement => {
+					{paginatedAchievements.length > 0 ? (
+						paginatedAchievements.map(achievement => {
 							const rarityInfo = getRarityInfo(achievement.rarity)
 							return (
 								<Card key={achievement.id} className='overflow-hidden'>

@@ -145,8 +145,9 @@ export function OrganizationTypesTable({
 		autoResetPageIndex: false,
 	})
 
-	const filteredOrganizationTypes = table
-		.getFilteredRowModel()
+	// Используем getRowModel() вместо getFilteredRowModel() для получения только строк текущей страницы
+	const paginatedOrganizationTypes = table
+		.getRowModel()
 		.rows.map(row => row.original)
 
 	if (isMobile) {
@@ -160,8 +161,8 @@ export function OrganizationTypesTable({
 				/>
 
 				<div className='space-y-3'>
-					{filteredOrganizationTypes.length > 0 ? (
-						filteredOrganizationTypes.map(organizationType => (
+					{paginatedOrganizationTypes.length > 0 ? (
+						paginatedOrganizationTypes.map(organizationType => (
 							<Card key={organizationType.id} className='overflow-hidden'>
 								<CardContent className='p-4'>
 									<div className='flex items-start justify-between'>

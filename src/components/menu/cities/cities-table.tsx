@@ -183,9 +183,8 @@ export function CitiesTable({ cities, onEdit, onDelete }: CitiesTableProps) {
 		autoResetPageIndex: false,
 	})
 
-	const filteredCities = table
-		.getFilteredRowModel()
-		.rows.map(row => row.original)
+	// Используем getRowModel() вместо getFilteredRowModel() для получения только строк текущей страницы
+	const paginatedCities = table.getRowModel().rows.map(row => row.original)
 
 	if (isMobile) {
 		return (
@@ -198,8 +197,8 @@ export function CitiesTable({ cities, onEdit, onDelete }: CitiesTableProps) {
 				/>
 
 				<div className='space-y-3'>
-					{filteredCities.length > 0 ? (
-						filteredCities.map(city => (
+					{paginatedCities.length > 0 ? (
+						paginatedCities.map(city => (
 							<Card key={city.id} className='overflow-hidden'>
 								<CardContent className='p-4'>
 									<div className='flex items-start justify-between'>

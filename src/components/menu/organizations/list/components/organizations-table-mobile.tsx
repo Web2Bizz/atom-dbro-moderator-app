@@ -32,15 +32,16 @@ export function OrganizationsTableMobile({
 		Record<number, boolean>
 	>({})
 
-	const filteredOrganizations = table
-		.getFilteredRowModel()
+	// Используем getRowModel() вместо getFilteredRowModel() для получения только строк текущей страницы
+	const paginatedOrganizations = table
+		.getRowModel()
 		.rows.map(row => row.original)
 
 	return (
 		<div className='space-y-4'>
 			<div className='space-y-3'>
-				{filteredOrganizations.length > 0 ? (
-					filteredOrganizations.map(organization => {
+				{paginatedOrganizations.length > 0 ? (
+					paginatedOrganizations.map(organization => {
 						const isExpanded = mobileExpanded[organization.id] || false
 
 						return (

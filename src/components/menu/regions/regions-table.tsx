@@ -184,9 +184,8 @@ export function RegionsTable({ regions, onEdit, onDelete }: RegionsTableProps) {
 		autoResetPageIndex: false,
 	})
 
-	const filteredRegions = table
-		.getFilteredRowModel()
-		.rows.map(row => row.original)
+	// Используем getRowModel() вместо getFilteredRowModel() для получения только строк текущей страницы
+	const paginatedRegions = table.getRowModel().rows.map(row => row.original)
 
 	if (isMobile) {
 		return (
@@ -199,8 +198,8 @@ export function RegionsTable({ regions, onEdit, onDelete }: RegionsTableProps) {
 				/>
 
 				<div className='space-y-3'>
-					{filteredRegions.length > 0 ? (
-						filteredRegions.map(region => {
+					{paginatedRegions.length > 0 ? (
+						paginatedRegions.map(region => {
 							const createdAt = new Date(region.createdAt)
 							const updatedAt = new Date(region.updatedAt)
 

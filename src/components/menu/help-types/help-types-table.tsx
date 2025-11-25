@@ -145,9 +145,8 @@ export function HelpTypesTable({
 		autoResetPageIndex: false,
 	})
 
-	const filteredHelpTypes = table
-		.getFilteredRowModel()
-		.rows.map(row => row.original)
+	// Используем getRowModel() вместо getFilteredRowModel() для получения только строк текущей страницы
+	const paginatedHelpTypes = table.getRowModel().rows.map(row => row.original)
 
 	if (isMobile) {
 		return (
@@ -160,8 +159,8 @@ export function HelpTypesTable({
 				/>
 
 				<div className='space-y-3'>
-					{filteredHelpTypes.length > 0 ? (
-						filteredHelpTypes.map(helpType => (
+					{paginatedHelpTypes.length > 0 ? (
+						paginatedHelpTypes.map(helpType => (
 							<Card key={helpType.id} className='overflow-hidden'>
 								<CardContent className='p-4'>
 									<div className='flex items-start justify-between'>

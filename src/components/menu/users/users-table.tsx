@@ -233,9 +233,8 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 		autoResetPageIndex: false,
 	})
 
-	const filteredUsers = table
-		.getFilteredRowModel()
-		.rows.map(row => row.original)
+	// Используем getRowModel() вместо getFilteredRowModel() для получения только строк текущей страницы
+	const paginatedUsers = table.getRowModel().rows.map(row => row.original)
 
 	if (isMobile) {
 		return (
@@ -248,8 +247,8 @@ export function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
 				/>
 
 				<div className='space-y-3'>
-					{filteredUsers.length > 0 ? (
-						filteredUsers.map(user => {
+					{paginatedUsers.length > 0 ? (
+						paginatedUsers.map(user => {
 							const fullName = `${user.lastName} ${user.firstName} ${
 								user.middleName || ''
 							}`.trim()
