@@ -13,46 +13,58 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from '@/components/ui/drawer'
-import { OrganizationTypesTable } from './organization-types-table'
-import { OrganizationTypeForm } from './organization-type-form'
-import { DeleteOrganizationTypeDialog } from './delete-organization-type-dialog'
 import {
-	type OrganizationType,
-	type OrganizationTypeFormData,
-} from './types'
+	useCreateOrganizationTypeMutation,
+	useDeleteOrganizationTypeMutation,
+	useGetOrganizationTypesQuery,
+	useUpdateOrganizationTypeMutation,
+	type OrganizationType as ApiOrganizationType,
+} from '@/store/entities'
+import { DeleteOrganizationTypeDialog } from './delete-organization-type-dialog'
+import { OrganizationTypeForm } from './organization-type-form'
+import { OrganizationTypesTable } from './organization-types-table'
+import { type OrganizationType, type OrganizationTypeFormData } from './types'
 
-// Моковые данные для демонстрации
-const mockOrganizationTypes: OrganizationType[] = [
-	{
-		id: 1,
-		name: 'Благотворительный фонд',
+// Преобразуем тип организации из API в формат компонента
+const mapApiOrganizationTypeToComponentOrganizationType = (
+	apiOrganizationType: ApiOrganizationType
+): OrganizationType => {
+	return {
+		id: apiOrganizationType.id,
+		name: apiOrganizationType.name,
 		recordStatus: 'CREATED',
-		createdAt: '2025-11-15T18:13:09.530Z',
-		updatedAt: '2025-11-15T18:13:09.530Z',
-	},
-	{
-		id: 2,
-		name: 'Некоммерческая организация',
-		recordStatus: 'CREATED',
-		createdAt: '2025-11-15T18:13:09.530Z',
-		updatedAt: '2025-11-15T18:13:09.530Z',
-	},
-	{
-		id: 3,
-		name: 'Волонтерское объединение',
-		recordStatus: 'CREATED',
-		createdAt: '2025-11-15T18:13:09.530Z',
-		updatedAt: '2025-11-15T18:13:09.530Z',
-	},
-]
+		createdAt: apiOrganizationType.createdAt,
+		updatedAt: apiOrganizationType.updatedAt,
+	}
+}
 
 export function OrganizationTypesPageContent() {
-	const [organizationTypes, setOrganizationTypes] = React.useState<
-		OrganizationType[]
-	>(mockOrganizationTypes)
+	const {
+		data: organizationTypesData,
+		isLoading: isLoadingOrganizationTypes,
+		error: organizationTypesError,
+	} = useGetOrganizationTypesQuery()
+
+	const [createOrganizationType] = useCreateOrganizationTypeMutation()
+	const [updateOrganizationType] = useUpdateOrganizationTypeMutation()
+	const [deleteOrganizationType] = useDeleteOrganizationTypeMutation()
+
+	const organizationTypes = React.useMemo(() => {
+		if (!organizationTypesData) return []
+		return organizationTypesData.map(
+			mapApiOrganizationTypeToComponentOrganizationType
+		)
+	}, [organizationTypesData])
+
+	React.useEffect(() => {
+		if (organizationTypesError) {
+			toast.error('Ошибка при загрузке типов организаций')
+		}
+	}, [organizationTypesError])
 	const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
-	const [editingOrganizationType, setEditingOrganizationType] =
-		React.useState<OrganizationType | undefined>()
+	const [editingOrganizationType, setEditingOrganizationType] = React.useState<
+		OrganizationType | undefined
+	>()
 	const [isLoading, setIsLoading] = React.useState(false)
 	const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
 	const [organizationTypeToDelete, setOrganizationTypeToDelete] =
@@ -78,11 +90,7 @@ export function OrganizationTypesPageContent() {
 
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 500))
-			setOrganizationTypes(prev =>
-				prev.filter(ot => ot.id !== organizationTypeToDelete.id)
-			)
+			await deleteOrganizationType(organizationTypeToDelete.id).unwrap()
 			toast.success('Тип организации успешно удален')
 			setDeleteDialogOpen(false)
 			setOrganizationTypeToDelete(null)
@@ -96,35 +104,20 @@ export function OrganizationTypesPageContent() {
 	const handleSubmit = async (data: OrganizationTypeFormData) => {
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 1000))
-
 			if (editingOrganizationType) {
 				// Обновление существующего типа организации
-				setOrganizationTypes(prev =>
-					prev.map(ot =>
-						ot.id === editingOrganizationType.id
-							? {
-									...data,
-									id: editingOrganizationType.id,
-									recordStatus: ot.recordStatus,
-									createdAt: ot.createdAt,
-									updatedAt: new Date().toISOString(),
-							  }
-							: ot
-					)
-				)
+				await updateOrganizationType({
+					id: editingOrganizationType.id,
+					data: {
+						name: data.name,
+					},
+				}).unwrap()
 				toast.success('Тип организации успешно обновлен')
 			} else {
 				// Создание нового типа организации
-				const newOrganizationType: OrganizationType = {
-					...data,
-					id: Math.max(...organizationTypes.map(ot => ot.id), 0) + 1,
-					recordStatus: 'CREATED',
-					createdAt: new Date().toISOString(),
-					updatedAt: new Date().toISOString(),
-				}
-				setOrganizationTypes(prev => [...prev, newOrganizationType])
+				await createOrganizationType({
+					name: data.name,
+				}).unwrap()
 				toast.success('Тип организации успешно создан')
 			}
 
@@ -132,7 +125,9 @@ export function OrganizationTypesPageContent() {
 			setEditingOrganizationType(undefined)
 		} catch {
 			toast.error(
-				`Ошибка при ${editingOrganizationType ? 'обновлении' : 'создании'} типа организации`
+				`Ошибка при ${
+					editingOrganizationType ? 'обновлении' : 'создании'
+				} типа организации`
 			)
 		} finally {
 			setIsLoading(false)
@@ -190,11 +185,33 @@ export function OrganizationTypesPageContent() {
 			</div>
 
 			<div className='rounded-lg border bg-card p-4 shadow-sm sm:p-6'>
-				<OrganizationTypesTable
-					organizationTypes={organizationTypes}
-					onEdit={handleEdit}
-					onDelete={handleDeleteClick}
-				/>
+				{(() => {
+					if (isLoadingOrganizationTypes) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-muted-foreground'>
+									Загрузка типов организаций...
+								</p>
+							</div>
+						)
+					}
+					if (organizationTypesError) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-destructive'>
+									Ошибка при загрузке типов организаций
+								</p>
+							</div>
+						)
+					}
+					return (
+						<OrganizationTypesTable
+							organizationTypes={organizationTypes}
+							onEdit={handleEdit}
+							onDelete={handleDeleteClick}
+						/>
+					)
+				})()}
 			</div>
 
 			<DeleteOrganizationTypeDialog
@@ -207,4 +224,3 @@ export function OrganizationTypesPageContent() {
 		</div>
 	)
 }
-

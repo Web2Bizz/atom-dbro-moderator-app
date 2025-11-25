@@ -15,7 +15,6 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import {
 	Select,
 	SelectContent,
@@ -23,6 +22,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { type Achievement } from './types'
 
 const achievementFormSchema = z.object({
@@ -30,14 +30,12 @@ const achievementFormSchema = z.object({
 	description: z.string().min(1, 'Описание обязательно'),
 	icon: z.string().min(1, 'Иконка обязательна'),
 	rarity: z.string().min(1, 'Редкость обязательна'),
-	questId: z.number().nullable(),
 })
 
 type AchievementFormValues = z.infer<typeof achievementFormSchema>
 
 interface AchievementFormProps {
 	achievement?: Achievement
-	quests: Array<{ id: number; name: string }>
 	onSubmit: (data: AchievementFormValues) => Promise<void> | void
 	onCancel: () => void
 	isLoading?: boolean
@@ -53,7 +51,6 @@ const rarityOptions = [
 
 export function AchievementForm({
 	achievement,
-	quests,
 	onSubmit,
 	onCancel,
 	isLoading = false,
@@ -66,14 +63,12 @@ export function AchievementForm({
 					description: achievement.description,
 					icon: achievement.icon,
 					rarity: achievement.rarity,
-					questId: achievement.questId,
 			  }
 			: {
 					title: '',
 					description: '',
 					icon: '🏆',
 					rarity: 'common',
-					questId: null,
 			  },
 	})
 
@@ -130,11 +125,7 @@ export function AchievementForm({
 									Иконка (эмодзи) <span className='text-destructive'>*</span>
 								</FormLabel>
 								<FormControl>
-									<Input
-										placeholder='🏆'
-										maxLength={2}
-										{...field}
-									/>
+									<Input placeholder='🏆' maxLength={2} {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -149,10 +140,7 @@ export function AchievementForm({
 								<FormLabel>
 									Редкость <span className='text-destructive'>*</span>
 								</FormLabel>
-								<Select
-									onValueChange={field.onChange}
-									value={field.value}
-								>
+								<Select onValueChange={field.onChange} value={field.value}>
 									<FormControl>
 										<SelectTrigger>
 											<SelectValue placeholder='Выберите редкость' />
@@ -171,37 +159,6 @@ export function AchievementForm({
 						)}
 					/>
 				</div>
-
-				<FormField
-					control={form.control}
-					name='questId'
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Квест</FormLabel>
-							<Select
-								onValueChange={value =>
-									field.onChange(value === 'none' ? null : Number(value))
-								}
-								value={field.value ? String(field.value) : 'none'}
-							>
-								<FormControl>
-									<SelectTrigger>
-										<SelectValue placeholder='Выберите квест (необязательно)' />
-									</SelectTrigger>
-								</FormControl>
-								<SelectContent>
-									<SelectItem value='none'>Не привязан к квесту</SelectItem>
-									{quests.map(quest => (
-										<SelectItem key={quest.id} value={String(quest.id)}>
-											{quest.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
 
 				<div className='flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end'>
 					<Button
@@ -225,4 +182,3 @@ export function AchievementForm({
 		</Form>
 	)
 }
-

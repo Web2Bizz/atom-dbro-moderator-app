@@ -38,7 +38,6 @@ import { type Achievement } from './types'
 
 interface AchievementsTableProps {
 	achievements: Achievement[]
-	quests: Array<{ id: number; name: string }>
 	onEdit: (achievement: Achievement) => void
 	onDelete: (achievement: Achievement) => void
 }
@@ -73,7 +72,6 @@ const rarityConfig: Record<string, { label: string; className: string }> = {
 
 export function AchievementsTable({
 	achievements,
-	quests,
 	onEdit,
 	onDelete,
 }: AchievementsTableProps) {
@@ -190,7 +188,7 @@ export function AchievementsTable({
 				},
 			},
 		],
-		[onEdit, onDelete, quests]
+		[onEdit, onDelete]
 	)
 
 	const table = useReactTable({

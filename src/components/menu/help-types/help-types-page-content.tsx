@@ -13,43 +13,60 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from '@/components/ui/drawer'
-import { HelpTypesTable } from './help-types-table'
-import { HelpTypeForm } from './help-type-form'
+import {
+	useCreateHelpTypeMutation,
+	useDeleteHelpTypeMutation,
+	useGetHelpTypesQuery,
+	useUpdateHelpTypeMutation,
+	type HelpType as ApiHelpType,
+} from '@/store/entities'
 import { DeleteHelpTypeDialog } from './delete-help-type-dialog'
+import { HelpTypeForm } from './help-type-form'
+import { HelpTypesTable } from './help-types-table'
 import { type HelpType, type HelpTypeFormData } from './types'
 
-// Моковые данные для демонстрации
-const mockHelpTypes: HelpType[] = [
-	{
-		id: 1,
-		name: 'Материальная помощь',
+// Преобразуем вид помощи из API в формат компонента
+const mapApiHelpTypeToComponentHelpType = (
+	apiHelpType: ApiHelpType
+): HelpType => {
+	return {
+		id: apiHelpType.id,
+		name: apiHelpType.name,
 		recordStatus: 'CREATED',
-		createdAt: '2025-11-14T21:16:58.882Z',
-		updatedAt: '2025-11-14T21:16:58.882Z',
-	},
-	{
-		id: 2,
-		name: 'Волонтеры',
-		recordStatus: 'CREATED',
-		createdAt: '2025-11-14T21:16:58.882Z',
-		updatedAt: '2025-11-14T21:16:58.882Z',
-	},
-	{
-		id: 3,
-		name: 'Экология',
-		recordStatus: 'CREATED',
-		createdAt: '2025-11-14T21:16:58.882Z',
-		updatedAt: '2025-11-14T21:16:58.882Z',
-	},
-]
+		createdAt: apiHelpType.createdAt,
+		updatedAt: apiHelpType.updatedAt,
+	}
+}
 
 export function HelpTypesPageContent() {
-	const [helpTypes, setHelpTypes] = React.useState<HelpType[]>(mockHelpTypes)
+	const {
+		data: helpTypesData,
+		isLoading: isLoadingHelpTypes,
+		error: helpTypesError,
+	} = useGetHelpTypesQuery()
+
+	const [createHelpType] = useCreateHelpTypeMutation()
+	const [updateHelpType] = useUpdateHelpTypeMutation()
+	const [deleteHelpType] = useDeleteHelpTypeMutation()
+
+	const helpTypes = React.useMemo(() => {
+		if (!helpTypesData) return []
+		return helpTypesData.map(mapApiHelpTypeToComponentHelpType)
+	}, [helpTypesData])
+
+	React.useEffect(() => {
+		if (helpTypesError) {
+			toast.error('Ошибка при загрузке видов помощи')
+		}
+	}, [helpTypesError])
 	const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
-	const [editingHelpType, setEditingHelpType] = React.useState<HelpType | undefined>()
+	const [editingHelpType, setEditingHelpType] = React.useState<
+		HelpType | undefined
+	>()
 	const [isLoading, setIsLoading] = React.useState(false)
 	const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
-	const [helpTypeToDelete, setHelpTypeToDelete] = React.useState<HelpType | null>(null)
+	const [helpTypeToDelete, setHelpTypeToDelete] =
+		React.useState<HelpType | null>(null)
 
 	const handleCreate = () => {
 		setEditingHelpType(undefined)
@@ -71,9 +88,7 @@ export function HelpTypesPageContent() {
 
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 500))
-			setHelpTypes(prev => prev.filter(ht => ht.id !== helpTypeToDelete.id))
+			await deleteHelpType(helpTypeToDelete.id).unwrap()
 			toast.success('Вид помощи успешно удален')
 			setDeleteDialogOpen(false)
 			setHelpTypeToDelete(null)
@@ -87,35 +102,20 @@ export function HelpTypesPageContent() {
 	const handleSubmit = async (data: HelpTypeFormData) => {
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 1000))
-
 			if (editingHelpType) {
 				// Обновление существующего вида помощи
-				setHelpTypes(prev =>
-					prev.map(ht =>
-						ht.id === editingHelpType.id
-							? {
-									...data,
-									id: editingHelpType.id,
-									recordStatus: ht.recordStatus,
-									createdAt: ht.createdAt,
-									updatedAt: new Date().toISOString(),
-							  }
-							: ht
-					)
-				)
+				await updateHelpType({
+					id: editingHelpType.id,
+					data: {
+						name: data.name,
+					},
+				}).unwrap()
 				toast.success('Вид помощи успешно обновлен')
 			} else {
 				// Создание нового вида помощи
-				const newHelpType: HelpType = {
-					...data,
-					id: Math.max(...helpTypes.map(ht => ht.id), 0) + 1,
-					recordStatus: 'CREATED',
-					createdAt: new Date().toISOString(),
-					updatedAt: new Date().toISOString(),
-				}
-				setHelpTypes(prev => [...prev, newHelpType])
+				await createHelpType({
+					name: data.name,
+				}).unwrap()
 				toast.success('Вид помощи успешно создан')
 			}
 
@@ -181,11 +181,33 @@ export function HelpTypesPageContent() {
 			</div>
 
 			<div className='rounded-lg border bg-card p-4 shadow-sm sm:p-6'>
-				<HelpTypesTable
-					helpTypes={helpTypes}
-					onEdit={handleEdit}
-					onDelete={handleDeleteClick}
-				/>
+				{(() => {
+					if (isLoadingHelpTypes) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-muted-foreground'>
+									Загрузка видов помощи...
+								</p>
+							</div>
+						)
+					}
+					if (helpTypesError) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-destructive'>
+									Ошибка при загрузке видов помощи
+								</p>
+							</div>
+						)
+					}
+					return (
+						<HelpTypesTable
+							helpTypes={helpTypes}
+							onEdit={handleEdit}
+							onDelete={handleDeleteClick}
+						/>
+					)
+				})()}
 			</div>
 
 			<DeleteHelpTypeDialog
@@ -198,4 +220,3 @@ export function HelpTypesPageContent() {
 		</div>
 	)
 }
-

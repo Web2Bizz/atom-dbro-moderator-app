@@ -13,43 +13,56 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from '@/components/ui/drawer'
+import {
+	useCreateCategoryMutation,
+	useDeleteCategoryMutation,
+	useGetCategoriesQuery,
+	useUpdateCategoryMutation,
+	type Category as ApiCategory,
+} from '@/store/entities'
+import { DeleteQuestCategoryDialog } from './delete-quest-category-dialog'
 import { QuestCategoriesTable } from './quest-categories-table'
 import { QuestCategoryForm } from './quest-category-form'
-import { DeleteQuestCategoryDialog } from './delete-quest-category-dialog'
 import { type QuestCategory, type QuestCategoryFormData } from './types'
 
-// Моковые данные для демонстрации
-const mockQuestCategories: QuestCategory[] = [
-	{
-		id: 1,
-		name: 'Экология',
+// Преобразуем категорию из API в формат компонента
+const mapApiCategoryToComponentQuestCategory = (
+	apiCategory: ApiCategory
+): QuestCategory => {
+	return {
+		id: apiCategory.id,
+		name: apiCategory.name,
 		recordStatus: 'CREATED',
-		createdAt: '2025-11-16T11:05:05.565Z',
-		updatedAt: '2025-11-16T11:05:05.565Z',
-	},
-	{
-		id: 2,
-		name: 'Социальная помощь',
-		recordStatus: 'CREATED',
-		createdAt: '2025-11-16T11:05:05.565Z',
-		updatedAt: '2025-11-16T11:05:05.565Z',
-	},
-	{
-		id: 3,
-		name: 'Образование',
-		recordStatus: 'CREATED',
-		createdAt: '2025-11-16T11:05:05.565Z',
-		updatedAt: '2025-11-16T11:05:05.565Z',
-	},
-]
+		createdAt: apiCategory.createdAt,
+		updatedAt: apiCategory.updatedAt,
+	}
+}
 
 export function QuestCategoriesPageContent() {
-	const [questCategories, setQuestCategories] = React.useState<QuestCategory[]>(
-		mockQuestCategories
-	)
+	const {
+		data: categoriesData,
+		isLoading: isLoadingCategories,
+		error: categoriesError,
+	} = useGetCategoriesQuery()
+
+	const [createCategory] = useCreateCategoryMutation()
+	const [updateCategory] = useUpdateCategoryMutation()
+	const [deleteCategory] = useDeleteCategoryMutation()
+
+	const questCategories = React.useMemo(() => {
+		if (!categoriesData) return []
+		return categoriesData.map(mapApiCategoryToComponentQuestCategory)
+	}, [categoriesData])
+
+	React.useEffect(() => {
+		if (categoriesError) {
+			toast.error('Ошибка при загрузке категорий квестов')
+		}
+	}, [categoriesError])
 	const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
-	const [editingQuestCategory, setEditingQuestCategory] =
-		React.useState<QuestCategory | undefined>()
+	const [editingQuestCategory, setEditingQuestCategory] = React.useState<
+		QuestCategory | undefined
+	>()
 	const [isLoading, setIsLoading] = React.useState(false)
 	const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
 	const [questCategoryToDelete, setQuestCategoryToDelete] =
@@ -75,11 +88,7 @@ export function QuestCategoriesPageContent() {
 
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 500))
-			setQuestCategories(prev =>
-				prev.filter(qc => qc.id !== questCategoryToDelete.id)
-			)
+			await deleteCategory(questCategoryToDelete.id).unwrap()
 			toast.success('Категория квеста успешно удалена')
 			setDeleteDialogOpen(false)
 			setQuestCategoryToDelete(null)
@@ -93,35 +102,20 @@ export function QuestCategoriesPageContent() {
 	const handleSubmit = async (data: QuestCategoryFormData) => {
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 1000))
-
 			if (editingQuestCategory) {
 				// Обновление существующей категории квеста
-				setQuestCategories(prev =>
-					prev.map(qc =>
-						qc.id === editingQuestCategory.id
-							? {
-									...data,
-									id: editingQuestCategory.id,
-									recordStatus: qc.recordStatus,
-									createdAt: qc.createdAt,
-									updatedAt: new Date().toISOString(),
-							  }
-							: qc
-					)
-				)
+				await updateCategory({
+					id: editingQuestCategory.id,
+					data: {
+						name: data.name,
+					},
+				}).unwrap()
 				toast.success('Категория квеста успешно обновлена')
 			} else {
 				// Создание новой категории квеста
-				const newQuestCategory: QuestCategory = {
-					...data,
-					id: Math.max(...questCategories.map(qc => qc.id), 0) + 1,
-					recordStatus: 'CREATED',
-					createdAt: new Date().toISOString(),
-					updatedAt: new Date().toISOString(),
-				}
-				setQuestCategories(prev => [...prev, newQuestCategory])
+				await createCategory({
+					name: data.name,
+				}).unwrap()
 				toast.success('Категория квеста успешно создана')
 			}
 
@@ -129,7 +123,9 @@ export function QuestCategoriesPageContent() {
 			setEditingQuestCategory(undefined)
 		} catch {
 			toast.error(
-				`Ошибка при ${editingQuestCategory ? 'обновлении' : 'создании'} категории квеста`
+				`Ошибка при ${
+					editingQuestCategory ? 'обновлении' : 'создании'
+				} категории квеста`
 			)
 		} finally {
 			setIsLoading(false)
@@ -187,11 +183,33 @@ export function QuestCategoriesPageContent() {
 			</div>
 
 			<div className='rounded-lg border bg-card p-4 shadow-sm sm:p-6'>
-				<QuestCategoriesTable
-					questCategories={questCategories}
-					onEdit={handleEdit}
-					onDelete={handleDeleteClick}
-				/>
+				{(() => {
+					if (isLoadingCategories) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-muted-foreground'>
+									Загрузка категорий квестов...
+								</p>
+							</div>
+						)
+					}
+					if (categoriesError) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-destructive'>
+									Ошибка при загрузке категорий квестов
+								</p>
+							</div>
+						)
+					}
+					return (
+						<QuestCategoriesTable
+							questCategories={questCategories}
+							onEdit={handleEdit}
+							onDelete={handleDeleteClick}
+						/>
+					)
+				})()}
 			</div>
 
 			<DeleteQuestCategoryDialog
@@ -204,4 +222,3 @@ export function QuestCategoriesPageContent() {
 		</div>
 	)
 }
-
