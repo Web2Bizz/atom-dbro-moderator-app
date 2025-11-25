@@ -36,6 +36,17 @@ export function OrganizationsTable({
 
 	const columns = React.useMemo(() => createColumns({ onDelete }), [onDelete])
 
+	// Кастомная функция фильтрации - ищет только по названию организации
+	const globalFilterFn = (row: any, _columnId: string, filterValue: string) => {
+		if (!filterValue) return true
+
+		const organization = row.original as Organization
+		const searchValue = filterValue.toLowerCase()
+		const name = (organization.name || '').toLowerCase()
+
+		return name.includes(searchValue)
+	}
+
 	const table = useReactTable({
 		data: organizations,
 		columns,
@@ -48,7 +59,7 @@ export function OrganizationsTable({
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
-		globalFilterFn: 'includesString',
+		globalFilterFn,
 		state: {
 			sorting,
 			rowSelection,

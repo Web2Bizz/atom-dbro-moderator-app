@@ -19,6 +19,10 @@ import { OrganizationsTable } from './organizations-table'
 const mapApiOrganizationToComponentOrganization = (
 	apiOrg: ApiOrganization
 ): Organization => {
+	// Если API вернул объект city, используем его, иначе берем из cityId
+	const cityFromApi = apiOrg.city
+	const cityId = cityFromApi?.id || apiOrg.cityId
+
 	return {
 		id: apiOrg.id,
 		name: apiOrg.name || '',
@@ -37,12 +41,19 @@ const mapApiOrganizationToComponentOrganization = (
 		gallery: apiOrg.gallery || [],
 		createdAt: apiOrg.createdAt || new Date().toISOString(),
 		updatedAt: apiOrg.updatedAt || new Date().toISOString(),
-		city: {
-			id: apiOrg.cityId,
-			name: '', // Будет заполнено из списка городов
-			latitude: apiOrg.latitude || 0,
-			longitude: apiOrg.longitude || 0,
-		},
+		city: cityFromApi
+			? {
+					id: cityFromApi.id,
+					name: cityFromApi.name,
+					latitude: Number(cityFromApi.latitude) || 0,
+					longitude: Number(cityFromApi.longitude) || 0,
+			  }
+			: {
+					id: cityId,
+					name: '', // Будет заполнено из списка городов
+					latitude: apiOrg.latitude || 0,
+					longitude: apiOrg.longitude || 0,
+			  },
 		type: {
 			id: apiOrg.typeId || apiOrg.organizationTypeId || 0,
 			name: '', // Будет заполнено из списка типов организаций
@@ -75,8 +86,21 @@ export function OrganizationsPageContent() {
 		)
 
 		// Заполняем названия городов, типов и помощи
+		// Если city уже заполнен из API, используем его, иначе ищем в списке городов
 		return mapped.map(org => {
-			const city = citiesData?.find(c => c.id === org.city.id)
+			// Если название города уже есть (пришло из API), используем его
+			const cityFromList = org.city.name
+				? null
+				: citiesData?.find(c => c.id === org.city.id)
+			const city = cityFromList
+				? {
+						...org.city,
+						name: cityFromList.name,
+						latitude: Number(cityFromList.latitude) || org.city.latitude,
+						longitude: Number(cityFromList.longitude) || org.city.longitude,
+				  }
+				: org.city
+
 			const type = organizationTypesData?.find(t => t.id === org.type.id)
 			const helpTypes = org.helpTypes.map(ht => {
 				const helpType = helpTypesData?.find(h => h.id === ht.id)
@@ -88,14 +112,7 @@ export function OrganizationsPageContent() {
 
 			return {
 				...org,
-				city: city
-					? {
-							...org.city,
-							name: city.name,
-							latitude: Number(city.latitude) || 0,
-							longitude: Number(city.longitude) || 0,
-					  }
-					: org.city,
+				city,
 				type: type
 					? {
 							...org.type,

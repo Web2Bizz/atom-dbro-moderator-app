@@ -1,5 +1,7 @@
 // Типы для организаций
 
+import type { City } from '../../city/model/type'
+
 export interface Contact {
 	name: string
 	value: string
@@ -9,7 +11,8 @@ export interface Organization {
 	id: number
 	name: string
 	cityId: number
-	typeId: number
+	city?: City // API может возвращать объект city
+	typeId?: number
 	organizationTypeId?: number
 	helpTypeIds?: number[]
 	latitude?: number
