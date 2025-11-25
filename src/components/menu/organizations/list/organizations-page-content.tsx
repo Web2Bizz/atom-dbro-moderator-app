@@ -1,46 +1,122 @@
 'use client'
 
+import {
+	useDeleteOrganizationMutation,
+	useGetCitiesQuery,
+	useGetHelpTypesQuery,
+	useGetOrganizationsQuery,
+	useGetOrganizationTypesQuery,
+	type Organization as ApiOrganization,
+} from '@/store/entities'
 import * as React from 'react'
 import { toast } from 'sonner'
-import { type City } from '../../cities/types'
-import { OrganizationsTable } from './organizations-table'
-import { OrganizationEditDrawer } from './components/organization-edit-drawer'
 import { DeleteOrganizationDialog } from '../delete-organization-dialog'
+import { type Organization } from '../types'
 import { OrganizationsHeader } from './components/organizations-header'
-import {
-	type Organization,
-	type OrganizationFormData,
-	type OrganizationType,
-	type HelpType,
-} from '../types'
-import {
-	mockOrganizations,
-	mockCities,
-	mockOrganizationTypes,
-	mockHelpTypes,
-} from './mock-data'
+import { OrganizationsTable } from './organizations-table'
+
+// Преобразуем организацию из API в формат компонента
+const mapApiOrganizationToComponentOrganization = (
+	apiOrg: ApiOrganization
+): Organization => {
+	return {
+		id: apiOrg.id,
+		name: apiOrg.name || '',
+		latitude: apiOrg.latitude || 0,
+		longitude: apiOrg.longitude || 0,
+		summary: apiOrg.summary || '',
+		mission: apiOrg.mission || '',
+		description: apiOrg.description || '',
+		goals: apiOrg.goals || [],
+		needs: apiOrg.needs || [],
+		address: apiOrg.address || '',
+		contacts: (apiOrg.contacts || []).map(contact => ({
+			name: contact.name,
+			value: contact.value,
+		})),
+		gallery: apiOrg.gallery || [],
+		createdAt: apiOrg.createdAt || new Date().toISOString(),
+		updatedAt: apiOrg.updatedAt || new Date().toISOString(),
+		city: {
+			id: apiOrg.cityId,
+			name: '', // Будет заполнено из списка городов
+			latitude: apiOrg.latitude || 0,
+			longitude: apiOrg.longitude || 0,
+		},
+		type: {
+			id: apiOrg.typeId || apiOrg.organizationTypeId || 0,
+			name: '', // Будет заполнено из списка типов организаций
+		},
+		helpTypes: (apiOrg.helpTypeIds || []).map(id => ({
+			id,
+			name: '', // Будет заполнено из списка типов помощи
+		})),
+	}
+}
 
 export function OrganizationsPageContent() {
-	const [organizations, setOrganizations] = React.useState<Organization[]>(
-		mockOrganizations
-	)
-	const [cities] = React.useState<City[]>(mockCities)
-	const [organizationTypes] = React.useState<OrganizationType[]>(
-		mockOrganizationTypes
-	)
-	const [helpTypes] = React.useState<HelpType[]>(mockHelpTypes)
-	const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
-	const [editingOrganization, setEditingOrganization] =
-		React.useState<Organization | undefined>()
+	const {
+		data: organizationsData,
+		isLoading: isLoadingOrganizations,
+		error: organizationsError,
+	} = useGetOrganizationsQuery()
+
+	const { data: citiesData } = useGetCitiesQuery()
+	const { data: organizationTypesData } = useGetOrganizationTypesQuery()
+	const { data: helpTypesData } = useGetHelpTypesQuery()
+
+	const [deleteOrganization] = useDeleteOrganizationMutation()
+
+	// Преобразуем данные из API
+	const organizations = React.useMemo(() => {
+		if (!organizationsData) return []
+		const mapped = organizationsData.map(
+			mapApiOrganizationToComponentOrganization
+		)
+
+		// Заполняем названия городов, типов и помощи
+		return mapped.map(org => {
+			const city = citiesData?.find(c => c.id === org.city.id)
+			const type = organizationTypesData?.find(t => t.id === org.type.id)
+			const helpTypes = org.helpTypes.map(ht => {
+				const helpType = helpTypesData?.find(h => h.id === ht.id)
+				return {
+					...ht,
+					name: helpType?.name || '',
+				}
+			})
+
+			return {
+				...org,
+				city: city
+					? {
+							...org.city,
+							name: city.name,
+							latitude: Number(city.latitude) || 0,
+							longitude: Number(city.longitude) || 0,
+					  }
+					: org.city,
+				type: type
+					? {
+							...org.type,
+							name: type.name,
+					  }
+					: org.type,
+				helpTypes,
+			}
+		})
+	}, [organizationsData, citiesData, organizationTypesData, helpTypesData])
+
+	React.useEffect(() => {
+		if (organizationsError) {
+			toast.error('Ошибка при загрузке организаций')
+		}
+	}, [organizationsError])
+
 	const [isLoading, setIsLoading] = React.useState(false)
 	const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
 	const [organizationToDelete, setOrganizationToDelete] =
 		React.useState<Organization | null>(null)
-
-	const handleEdit = (organization: Organization) => {
-		setEditingOrganization(organization)
-		setIsDrawerOpen(true)
-	}
 
 	const handleDeleteClick = (organization: Organization) => {
 		setOrganizationToDelete(organization)
@@ -52,11 +128,7 @@ export function OrganizationsPageContent() {
 
 		setIsLoading(true)
 		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 500))
-			setOrganizations(prev =>
-				prev.filter(org => org.id !== organizationToDelete.id)
-			)
+			await deleteOrganization(organizationToDelete.id).unwrap()
 			toast.success('Организация успешно удалена')
 			setDeleteDialogOpen(false)
 			setOrganizationToDelete(null)
@@ -67,80 +139,37 @@ export function OrganizationsPageContent() {
 		}
 	}
 
-	const handleSubmit = async (data: OrganizationFormData) => {
-		setIsLoading(true)
-		try {
-			// Здесь будет API вызов
-			await new Promise(resolve => setTimeout(resolve, 1000))
-
-			const selectedCity = cities.find(c => c.id === data.cityId)
-			const selectedType = organizationTypes.find(t => t.id === data.typeId)
-			const selectedHelpTypes = helpTypes.filter(ht =>
-				data.helpTypeIds?.includes(ht.id)
-			)
-
-			if (!selectedCity || !selectedType) {
-				toast.error('Ошибка: не найдены связанные данные')
-				return
-			}
-
-			// Обновление существующей организации
-			if (!editingOrganization) return
-
-			const now = new Date().toISOString()
-			setOrganizations(prev =>
-				prev.map(org =>
-					org.id === editingOrganization.id
-						? {
-								...data,
-								id: editingOrganization.id,
-								city: selectedCity,
-								type: selectedType,
-								helpTypes: selectedHelpTypes,
-								createdAt: org.createdAt,
-								updatedAt: now,
-							}
-						: org
-				)
-			)
-			toast.success('Организация успешно обновлена')
-
-			setIsDrawerOpen(false)
-			setEditingOrganization(undefined)
-		} catch {
-			toast.error('Ошибка при обновлении организации')
-		} finally {
-			setIsLoading(false)
-		}
-	}
-
-	const handleCancel = () => {
-		setIsDrawerOpen(false)
-		setEditingOrganization(undefined)
-	}
-
 	return (
 		<div className='flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6'>
 			<OrganizationsHeader />
 
-			<OrganizationEditDrawer
-				open={isDrawerOpen}
-				onOpenChange={setIsDrawerOpen}
-				organization={editingOrganization}
-				cities={cities}
-				organizationTypes={organizationTypes}
-				helpTypes={helpTypes}
-				onSubmit={handleSubmit}
-				onCancel={handleCancel}
-				isLoading={isLoading}
-			/>
-
 			<div className='rounded-lg border bg-card p-4 shadow-sm sm:p-6'>
-				<OrganizationsTable
-					organizations={organizations}
-					onEdit={handleEdit}
-					onDelete={handleDeleteClick}
-				/>
+				{(() => {
+					if (isLoadingOrganizations) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-muted-foreground'>
+									Загрузка организаций...
+								</p>
+							</div>
+						)
+					}
+					if (organizationsError) {
+						return (
+							<div className='flex items-center justify-center py-8'>
+								<p className='text-sm text-destructive'>
+									Ошибка при загрузке организаций
+								</p>
+							</div>
+						)
+					}
+					return (
+						<OrganizationsTable
+							organizations={organizations}
+							onDelete={handleDeleteClick}
+						/>
+					)
+				})()}
 			</div>
 
 			<DeleteOrganizationDialog
@@ -153,4 +182,3 @@ export function OrganizationsPageContent() {
 		</div>
 	)
 }
-

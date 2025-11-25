@@ -1,11 +1,5 @@
-import {
-	ChevronDown,
-	ChevronRight,
-	MoreVertical,
-	Pencil,
-	Trash2,
-} from 'lucide-react'
 import { type ColumnDef } from '@tanstack/react-table'
+import { ChevronDown, ChevronRight, MoreVertical, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -13,18 +7,15 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { type Organization } from '../../types'
 
 interface CreateColumnsParams {
-	onEdit: (organization: Organization) => void
 	onDelete: (organization: Organization) => void
 }
 
 export function createColumns({
-	onEdit,
 	onDelete,
 }: CreateColumnsParams): ColumnDef<Organization>[] {
 	return [
@@ -133,11 +124,6 @@ export function createColumns({
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align='end' className='w-40'>
-							<DropdownMenuItem onClick={() => onEdit(organization)}>
-								<Pencil className='mr-2 size-4' />
-								Редактировать
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
 							<DropdownMenuItem
 								variant='destructive'
 								onClick={() => onDelete(organization)}
@@ -152,4 +138,3 @@ export function createColumns({
 		},
 	]
 }
-

@@ -1,35 +1,31 @@
-import * as React from 'react'
-import {
-	ChevronDown,
-	ChevronRight,
-	MoreVertical,
-	MapPin,
-	Pencil,
-	Trash2,
-} from 'lucide-react'
-import { type Table } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { type Table } from '@tanstack/react-table'
+import {
+	ChevronDown,
+	ChevronRight,
+	MapPin,
+	MoreVertical,
+	Trash2,
+} from 'lucide-react'
+import * as React from 'react'
 import { type Organization } from '../../types'
 import { OrganizationDetailsMobile } from './organization-details-mobile'
 import { TablePagination } from './table-pagination'
 
 interface OrganizationsTableMobileProps {
 	table: Table<Organization>
-	onEdit: (organization: Organization) => void
 	onDelete: (organization: Organization) => void
 }
 
 export function OrganizationsTableMobile({
 	table,
-	onEdit,
 	onDelete,
 }: OrganizationsTableMobileProps) {
 	const [mobileExpanded, setMobileExpanded] = React.useState<
@@ -131,16 +127,6 @@ export function OrganizationsTableMobile({
 													</DropdownMenuTrigger>
 													<DropdownMenuContent align='end' className='w-40'>
 														<DropdownMenuItem
-															onClick={e => {
-																e.stopPropagation()
-																onEdit(organization)
-															}}
-														>
-															<Pencil className='mr-2 size-4' />
-															Редактировать
-														</DropdownMenuItem>
-														<DropdownMenuSeparator />
-														<DropdownMenuItem
 															variant='destructive'
 															onClick={e => {
 																e.stopPropagation()
@@ -173,4 +159,3 @@ export function OrganizationsTableMobile({
 		</div>
 	)
 }
-

@@ -21,13 +21,11 @@ import { TableSearch } from './components/table-search'
 
 interface OrganizationsTableProps {
 	organizations: Organization[]
-	onEdit: (organization: Organization) => void
 	onDelete: (organization: Organization) => void
 }
 
 export function OrganizationsTable({
 	organizations,
-	onEdit,
 	onDelete,
 }: OrganizationsTableProps) {
 	const [sorting, setSorting] = React.useState<SortingState>([])
@@ -36,10 +34,7 @@ export function OrganizationsTable({
 	const [globalFilter, setGlobalFilter] = React.useState('')
 	const isMobile = useIsMobile()
 
-	const columns = React.useMemo(
-		() => createColumns({ onEdit, onDelete }),
-		[onEdit, onDelete]
-	)
+	const columns = React.useMemo(() => createColumns({ onDelete }), [onDelete])
 
 	const table = useReactTable({
 		data: organizations,
@@ -76,11 +71,7 @@ export function OrganizationsTable({
 					onChange={setGlobalFilter}
 					className='w-full'
 				/>
-				<OrganizationsTableMobile
-					table={table}
-					onEdit={onEdit}
-					onDelete={onDelete}
-				/>
+				<OrganizationsTableMobile table={table} onDelete={onDelete} />
 			</div>
 		)
 	}
