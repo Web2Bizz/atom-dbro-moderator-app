@@ -40,7 +40,7 @@ export const helpTypeService = createApi({
 				}
 				return response
 			},
-			providesTags: (result, error, id) => [{ type: 'HelpType', id }],
+			providesTags: (_result, _error, id) => [{ type: 'HelpType', id }],
 		}),
 
 		// POST /v1/help-types - Создать вид помощи
@@ -75,7 +75,7 @@ export const helpTypeService = createApi({
 				}
 				return response
 			},
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'HelpType', id },
 				'HelpType',
 			],
@@ -87,7 +87,7 @@ export const helpTypeService = createApi({
 				url: `/v1/help-types/${id}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, id) => [
+			invalidatesTags: (_result, _error, id) => [
 				{ type: 'HelpType', id },
 				'HelpType',
 			],

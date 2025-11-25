@@ -42,7 +42,7 @@ export const organizationService = createApi({
 				}
 				return response
 			},
-			providesTags: (result, error, id) => [{ type: 'Organization', id }],
+			providesTags: (_result, _error, id) => [{ type: 'Organization', id }],
 		}),
 
 		// POST /v1/organizations - Создать организацию
@@ -80,7 +80,7 @@ export const organizationService = createApi({
 				}
 				return response
 			},
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Organization', id },
 				'Organization',
 			],
@@ -92,7 +92,7 @@ export const organizationService = createApi({
 				url: `/v1/organizations/${id}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, id) => [
+			invalidatesTags: (_result, _error, id) => [
 				{ type: 'Organization', id },
 				'Organization',
 			],
@@ -104,7 +104,7 @@ export const organizationService = createApi({
 				url: `/v1/organizations/${id}/approve`,
 				method: 'PATCH',
 			}),
-			invalidatesTags: (result, error, id) => [
+			invalidatesTags: (_result, _error, id) => [
 				{ type: 'Organization', id },
 				'Organization',
 			],
@@ -116,7 +116,7 @@ export const organizationService = createApi({
 				url: `/v1/organizations/${id}/disapprove`,
 				method: 'PATCH',
 			}),
-			invalidatesTags: (result, error, id) => [
+			invalidatesTags: (_result, _error, id) => [
 				{ type: 'Organization', id },
 				'Organization',
 			],
@@ -129,7 +129,7 @@ export const organizationService = createApi({
 				method: 'POST',
 				body: data,
 			}),
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Organization', id },
 				'Organization',
 			],
@@ -141,7 +141,7 @@ export const organizationService = createApi({
 				url: `/v1/organizations/${id}/owners/${userId}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Organization', id },
 				'Organization',
 			],
@@ -157,7 +157,7 @@ export const organizationService = createApi({
 				method: 'POST',
 				body: data,
 			}),
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Organization', id },
 				'Organization',
 			],
@@ -172,7 +172,7 @@ export const organizationService = createApi({
 				url: `/v1/organizations/${id}/help-types/${helpTypeId}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Organization', id },
 				'Organization',
 			],
@@ -194,7 +194,7 @@ export const organizationService = createApi({
 					body: formData,
 				}
 			},
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Organization', id },
 				'Organization',
 			],

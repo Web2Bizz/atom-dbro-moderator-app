@@ -44,7 +44,7 @@ export const organizationTypeService = createApi({
 				}
 				return response
 			},
-			providesTags: (result, error, id) => [{ type: 'OrganizationType', id }],
+			providesTags: (_result, _error, id) => [{ type: 'OrganizationType', id }],
 		}),
 
 		// POST /v1/organization-types - Создать тип организации
@@ -86,7 +86,7 @@ export const organizationTypeService = createApi({
 				}
 				return response
 			},
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'OrganizationType', id },
 				'OrganizationType',
 			],
@@ -98,7 +98,7 @@ export const organizationTypeService = createApi({
 				url: `/v1/organization-types/${id}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, id) => [
+			invalidatesTags: (_result, _error, id) => [
 				{ type: 'OrganizationType', id },
 				'OrganizationType',
 			],

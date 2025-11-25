@@ -156,7 +156,7 @@ export function CitiesTable({ cities, onEdit, onDelete }: CitiesTableProps) {
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
-		globalFilterFn: (row, columnId, filterValue) => {
+		globalFilterFn: (row, _columnId, filterValue) => {
 			const search = String(filterValue).toLowerCase()
 			const name = String(row.getValue('name') || '').toLowerCase()
 			const latitude = String(row.getValue('latitude') || '').toLowerCase()

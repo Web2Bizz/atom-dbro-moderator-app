@@ -40,7 +40,7 @@ export const categoryService = createApi({
 				}
 				return response
 			},
-			providesTags: (result, error, id) => [{ type: 'Category', id }],
+			providesTags: (_result, _error, id) => [{ type: 'Category', id }],
 		}),
 
 		// POST /v1/categories - Создать категорию
@@ -75,7 +75,7 @@ export const categoryService = createApi({
 				}
 				return response
 			},
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Category', id },
 				'Category',
 			],
@@ -87,7 +87,7 @@ export const categoryService = createApi({
 				url: `/v1/categories/${id}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, id) => [
+			invalidatesTags: (_result, _error, id) => [
 				{ type: 'Category', id },
 				'Category',
 			],

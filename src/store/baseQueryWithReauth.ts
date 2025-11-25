@@ -32,8 +32,6 @@ export const baseQueryWithReauth = async (
 	api: Parameters<typeof baseQuery>[1],
 	extraOptions: Parameters<typeof baseQuery>[2]
 ) => {
-	const url = typeof args === 'string' ? args : args.url
-
 	let result = await baseQuery(args, api, extraOptions)
 
 	// Если получили 401 (Unauthorized), пытаемся обновить токен

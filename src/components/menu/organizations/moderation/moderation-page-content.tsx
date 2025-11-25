@@ -99,22 +99,18 @@ export function ModerationPageContent() {
 	// Предполагаем, что неодобренные - это те, у которых нет поля approved или оно false
 	const organizations = React.useMemo(() => {
 		if (!organizationsData) return []
-		const mapped = organizationsData
-			.map(apiOrg =>
-				mapApiOrganizationToComponentOrganization(
-					apiOrg,
-					citiesData,
-					organizationTypesData,
-					helpTypesData
-				)
+		const mapped = organizationsData.map(apiOrg =>
+			mapApiOrganizationToComponentOrganization(
+				apiOrg,
+				citiesData,
+				organizationTypesData,
+				helpTypesData
 			)
-			// Фильтруем организации на модерации (предполагаем, что это все организации без approved статуса)
-			// Если API возвращает только неодобренные, то фильтр не нужен
-			.filter(org => {
-				// Если в API есть поле статуса, используем его
-				// Пока что берем все организации, так как API может возвращать только неодобренные
-				return true
-			})
+		)
+		// Фильтруем организации на модерации (предполагаем, что это все организации без approved статуса)
+		// Если API возвращает только неодобренные, то фильтр не нужен
+		// Фильтруем организации на модерации (предполагаем, что это все организации без approved статуса)
+		// Если API возвращает только неодобренные, то фильтр не нужен
 
 		return mapped
 	}, [organizationsData, citiesData, organizationTypesData, helpTypesData])

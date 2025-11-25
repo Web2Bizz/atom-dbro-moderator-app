@@ -7,12 +7,12 @@ import {
 	useGetOrganizationTypesQuery,
 	useGetQuestsQuery,
 	useUpdateQuestMutation,
+	type City as ApiCity,
+	type OrganizationType as ApiOrganizationType,
 	type Quest as ApiQuest,
 } from '@/store/entities'
 import * as React from 'react'
 import { toast } from 'sonner'
-import { type City } from '../../cities/types'
-import { type OrganizationType } from '../../organizations/types'
 import { type QuestCategory } from '../../quest-categories/types'
 import { DeleteQuestDialog } from '../delete-quest-dialog'
 import { type Quest, type QuestFormData } from '../types'
@@ -23,17 +23,17 @@ import { QuestsTable } from './quests-table'
 // Преобразуем квест из API в формат компонента
 const mapApiQuestToComponentQuest = (
 	apiQuest: ApiQuest,
-	citiesData: City[] = [],
-	organizationTypesData: OrganizationType[] = [],
+	citiesData: ApiCity[] = [],
+	organizationTypesData: ApiOrganizationType[] = [],
 	categoriesData: QuestCategory[] = []
 ): Quest => {
-	const city = citiesData.find(c => c.id === apiQuest.cityId) ?? apiQuest.city
-	const organizationType =
-		organizationTypesData.find(ot => ot.id === apiQuest.organizationTypeId) ??
-		apiQuest.organizationType
+	const city = citiesData.find(c => c.id === apiQuest.cityId)
+	const organizationType = organizationTypesData.find(
+		ot => ot.id === apiQuest.organizationTypeId
+	)
 	const categories = apiQuest.categoryIds
 		? categoriesData.filter(c => apiQuest.categoryIds?.includes(c.id))
-		: apiQuest.categories ?? []
+		: []
 
 	return {
 		id: apiQuest.id,
@@ -42,7 +42,7 @@ const mapApiQuestToComponentQuest = (
 		status: apiQuest.status || 'active',
 		experienceReward: apiQuest.experienceReward,
 		achievementId: apiQuest.achievementId || null,
-		ownerId: (apiQuest as any).ownerId || 0,
+		ownerId: (apiQuest as ApiQuest & { ownerId?: number }).ownerId ?? 0,
 		cityId: apiQuest.cityId,
 		organizationTypeId: apiQuest.organizationTypeId || 0,
 		latitude:
@@ -65,28 +65,35 @@ const mapApiQuestToComponentQuest = (
 		})),
 		createdAt: apiQuest.createdAt || new Date().toISOString(),
 		updatedAt: apiQuest.updatedAt || new Date().toISOString(),
-		city: city
-			? {
-					id: city.id,
-					name: city.name,
-					latitude:
-						typeof city.latitude === 'string'
-							? Number.parseFloat(city.latitude)
-							: city.latitude ?? 0,
-					longitude:
-						typeof city.longitude === 'string'
-							? Number.parseFloat(city.longitude)
-							: city.longitude ?? 0,
-					regionId: city.regionId ?? 0,
-			  }
-			: undefined,
+		city: (() => {
+			if (!city) return undefined
+			let lat = 0
+			if (typeof city.latitude === 'string') {
+				lat = Number.parseFloat(city.latitude)
+			} else if (typeof city.latitude === 'number') {
+				lat = city.latitude
+			}
+			let lng = 0
+			if (typeof city.longitude === 'string') {
+				lng = Number.parseFloat(city.longitude)
+			} else if (typeof city.longitude === 'number') {
+				lng = city.longitude
+			}
+			return {
+				id: city.id,
+				name: city.name,
+				latitude: lat,
+				longitude: lng,
+				regionId: city.regionId ?? 0,
+			}
+		})(),
 		organizationType: organizationType
 			? {
 					id: organizationType.id,
 					name: organizationType.name,
 			  }
 			: undefined,
-		categories: categories.map(cat => ({
+		categories: categories.map((cat: QuestCategory) => ({
 			id: cat.id,
 			name: cat.name,
 			recordStatus: 'CREATED' as const,

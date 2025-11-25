@@ -42,7 +42,7 @@ export const cityService = createApi({
 				}
 				return response
 			},
-			providesTags: (result, error, id) => [{ type: 'City', id }],
+			providesTags: (_result, _error, id) => [{ type: 'City', id }],
 		}),
 
 		// POST /v1/cities - Создать город
@@ -75,7 +75,7 @@ export const cityService = createApi({
 					}
 					return response
 				},
-				invalidatesTags: (result, error, { id }) => [
+				invalidatesTags: (_result, _error, { id }) => [
 					{ type: 'City', id },
 					'City',
 				],
@@ -88,7 +88,7 @@ export const cityService = createApi({
 				url: `/v1/cities/${id}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, id) => [{ type: 'City', id }, 'City'],
+			invalidatesTags: (_result, _error, id) => [{ type: 'City', id }, 'City'],
 		}),
 
 		// POST /v2/cities - Массовое добавление городов (v2)

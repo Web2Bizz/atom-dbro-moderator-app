@@ -45,7 +45,7 @@ export const userService = createApi({
 				}
 				return response
 			},
-			providesTags: (result, error, id) => [{ type: 'User', id }],
+			providesTags: (_result, _error, id) => [{ type: 'User', id }],
 		}),
 
 		// POST /v1/users - Создать пользователя
@@ -79,7 +79,7 @@ export const userService = createApi({
 					}
 					return response
 				},
-				invalidatesTags: (result, error, { id }) => [
+				invalidatesTags: (_result, _error, { id }) => [
 					{ type: 'User', id },
 					'User',
 				],
@@ -102,7 +102,7 @@ export const userService = createApi({
 				}
 				return response
 			},
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'User', id },
 				'User',
 			],
@@ -114,7 +114,7 @@ export const userService = createApi({
 				url: `/v1/users/${id}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, id) => [{ type: 'User', id }, 'User'],
+			invalidatesTags: (_result, _error, id) => [{ type: 'User', id }, 'User'],
 		}),
 
 		// PATCH /v1/users/change-password - Изменить пароль

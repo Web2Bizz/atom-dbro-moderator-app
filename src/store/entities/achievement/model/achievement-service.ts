@@ -40,7 +40,7 @@ export const achievementService = createApi({
 				}
 				return response
 			},
-			providesTags: (result, error, id) => [{ type: 'Achievement', id }],
+			providesTags: (_result, _error, id) => [{ type: 'Achievement', id }],
 		}),
 
 		// POST /v1/achievements - Создать достижение
@@ -78,7 +78,7 @@ export const achievementService = createApi({
 				}
 				return response
 			},
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Achievement', id },
 				'Achievement',
 			],
@@ -90,7 +90,7 @@ export const achievementService = createApi({
 				url: `/v1/achievements/${id}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, id) => [
+			invalidatesTags: (_result, _error, id) => [
 				{ type: 'Achievement', id },
 				'Achievement',
 			],
@@ -120,7 +120,7 @@ export const achievementService = createApi({
 				}
 				return response.data || []
 			},
-			providesTags: (result, error, userId) => [
+			providesTags: (_result, _error, userId) => [
 				{ type: 'Achievement', id: `user-${userId}` },
 			],
 		}),

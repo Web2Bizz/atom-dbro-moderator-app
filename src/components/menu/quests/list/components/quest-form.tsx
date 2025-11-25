@@ -23,14 +23,15 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { type City } from '../../../cities/types'
+import { type OrganizationType } from '../../../organizations/types'
+import { type QuestCategory } from '../../../quest-categories/types'
 import { type Quest, type QuestFormData } from '../../types'
 
 const questFormSchema = z.object({
 	title: z.string().min(2, 'Название должно содержать минимум 2 символа'),
 	description: z.string().min(1, 'Описание обязательно'),
-	status: z.enum(['active', 'archived', 'completed'], {
-		required_error: 'Выберите статус',
-	}),
+	status: z.enum(['active', 'archived', 'completed']),
 })
 
 type QuestFormValues = z.infer<typeof questFormSchema>

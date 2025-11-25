@@ -151,7 +151,7 @@ export function RegionsTable({ regions, onEdit, onDelete }: RegionsTableProps) {
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
-		globalFilterFn: (row, columnId, filterValue) => {
+		globalFilterFn: (row, _columnId, filterValue) => {
 			const search = String(filterValue).toLowerCase()
 			const name = String(row.getValue('name') || '').toLowerCase()
 			const createdAt = row.getValue('createdAt')

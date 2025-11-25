@@ -60,7 +60,7 @@ export const questService = createApi({
 				}
 				return response
 			},
-			providesTags: (result, error, id) => [{ type: 'Quest', id }],
+			providesTags: (_result, _error, id) => [{ type: 'Quest', id }],
 		}),
 
 		// GET /api/v2/quests/{id} - Получить квест по ID с информацией об участии (v2)
@@ -78,7 +78,7 @@ export const questService = createApi({
 				}
 				return response
 			},
-			providesTags: (result, error, id) => [{ type: 'Quest', id }],
+			providesTags: (_result, _error, id) => [{ type: 'Quest', id }],
 		}),
 
 		// POST /v1/quests - Создать квест
@@ -113,7 +113,7 @@ export const questService = createApi({
 				}
 				return response
 			},
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Quest', id },
 				'Quest',
 			],
@@ -125,7 +125,7 @@ export const questService = createApi({
 				url: `/v1/quests/${id}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, id) => [{ type: 'Quest', id }, 'Quest'],
+			invalidatesTags: (_result, _error, id) => [{ type: 'Quest', id }, 'Quest'],
 		}),
 
 		// POST /v1/quests/{id}/join/{userId} - Присоединиться к квесту
@@ -134,7 +134,7 @@ export const questService = createApi({
 				url: `/v1/quests/${id}/join/${userId}`,
 				method: 'POST',
 			}),
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Quest', id },
 				'Quest',
 			],
@@ -146,7 +146,7 @@ export const questService = createApi({
 				url: `/v1/quests/${id}/leave/${userId}`,
 				method: 'POST',
 			}),
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Quest', id },
 				'Quest',
 			],
@@ -158,7 +158,7 @@ export const questService = createApi({
 				url: `/v1/quests/${id}/complete`,
 				method: 'POST',
 			}),
-			invalidatesTags: (result, error, id) => [{ type: 'Quest', id }, 'Quest'],
+			invalidatesTags: (_result, _error, id) => [{ type: 'Quest', id }, 'Quest'],
 		}),
 
 		// PATCH /v1/quests/{id}/archive - Архивировать квест
@@ -167,7 +167,7 @@ export const questService = createApi({
 				url: `/v1/quests/${id}/archive`,
 				method: 'PATCH',
 			}),
-			invalidatesTags: (result, error, id) => [{ type: 'Quest', id }, 'Quest'],
+			invalidatesTags: (_result, _error, id) => [{ type: 'Quest', id }, 'Quest'],
 		}),
 
 		// PATCH /v1/quests/{id}/unarchive - Разархивировать квест
@@ -176,7 +176,7 @@ export const questService = createApi({
 				url: `/v1/quests/${id}/unarchive`,
 				method: 'PATCH',
 			}),
-			invalidatesTags: (result, error, id) => [{ type: 'Quest', id }, 'Quest'],
+			invalidatesTags: (_result, _error, id) => [{ type: 'Quest', id }, 'Quest'],
 		}),
 
 		// GET /v1/quests/user/{userId} - Получить квесты пользователя
@@ -191,7 +191,7 @@ export const questService = createApi({
 				}
 				return response.data || []
 			},
-			providesTags: (result, error, userId) => [
+			providesTags: (_result, _error, userId) => [
 				{ type: 'Quest', id: `user-${userId}` },
 			],
 		}),
@@ -208,7 +208,7 @@ export const questService = createApi({
 				}
 				return response.data || []
 			},
-			providesTags: (result, error, userId) => [
+			providesTags: (_result, _error, userId) => [
 				{ type: 'Quest', id: `available-${userId}` },
 			],
 		}),
@@ -219,7 +219,7 @@ export const questService = createApi({
 				url: `/v1/quests/${id}/users`,
 				method: 'GET',
 			}),
-			providesTags: (result, error, id) => [{ type: 'Quest', id }],
+			providesTags: (_result, _error, id) => [{ type: 'Quest', id }],
 		}),
 
 		// PATCH /v1/quests/{id}/steps/{stepIndex}/requirement - Обновить требование этапа
@@ -232,7 +232,7 @@ export const questService = createApi({
 				method: 'PATCH',
 				body: data,
 			}),
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Quest', id },
 				'Quest',
 			],

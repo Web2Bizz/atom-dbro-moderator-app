@@ -12,6 +12,5 @@ export interface Achievement {
 
 export type AchievementFormData = Omit<
 	Achievement,
-	'id' | 'recordStatus' | 'createdAt' | 'updatedAt'
+	'id' | 'questId' | 'recordStatus' | 'createdAt' | 'updatedAt'
 >
-

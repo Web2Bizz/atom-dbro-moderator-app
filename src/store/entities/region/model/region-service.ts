@@ -41,7 +41,7 @@ export const regionService = createApi({
 				}
 				return response
 			},
-			providesTags: (result, error, id) => [{ type: 'Region', id }],
+			providesTags: (_result, _error, id) => [{ type: 'Region', id }],
 		}),
 
 		// POST /v1/regions - Создать регион
@@ -76,7 +76,7 @@ export const regionService = createApi({
 				}
 				return response
 			},
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'Region', id },
 				'Region',
 			],
@@ -88,7 +88,7 @@ export const regionService = createApi({
 				url: `/v1/regions/${id}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, id) => [
+			invalidatesTags: (_result, _error, id) => [
 				{ type: 'Region', id },
 				'Region',
 			],
@@ -106,7 +106,7 @@ export const regionService = createApi({
 				}
 				return response.data || []
 			},
-			providesTags: (result, error, id) => [{ type: 'Region', id }, 'Region'],
+			providesTags: (_result, _error, id) => [{ type: 'Region', id }, 'Region'],
 		}),
 	}),
 })

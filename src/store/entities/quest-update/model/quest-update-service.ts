@@ -42,7 +42,7 @@ export const questUpdateService = createApi({
 				}
 				return response
 			},
-			providesTags: (result, error, id) => [{ type: 'QuestUpdate', id }],
+			providesTags: (_result, _error, id) => [{ type: 'QuestUpdate', id }],
 		}),
 
 		// POST /v1/quest-updates - Создать обновление квеста
@@ -80,7 +80,7 @@ export const questUpdateService = createApi({
 				}
 				return response
 			},
-			invalidatesTags: (result, error, { id }) => [
+			invalidatesTags: (_result, _error, { id }) => [
 				{ type: 'QuestUpdate', id },
 				'QuestUpdate',
 			],
@@ -92,7 +92,7 @@ export const questUpdateService = createApi({
 				url: `/v1/quest-updates/${id}`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: (result, error, id) => [
+			invalidatesTags: (_result, _error, id) => [
 				{ type: 'QuestUpdate', id },
 				'QuestUpdate',
 			],
