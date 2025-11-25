@@ -1,5 +1,6 @@
-import { ThemeProvider } from 'next-themes'
+import { AuthProvider } from '@/contexts/AuthContext'
 import { setupStore } from '@/store/store'
+import { ThemeProvider } from 'next-themes'
 import { useMemo } from 'react'
 import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/integration/react'
@@ -12,9 +13,7 @@ interface LayoutProps {
 let storeInstance: ReturnType<typeof setupStore> | null = null
 
 function getStore() {
-	if (!storeInstance) {
-		storeInstance = setupStore()
-	}
+	storeInstance ??= setupStore()
 	return storeInstance
 }
 
@@ -25,11 +24,13 @@ export default function Layout({ children }: LayoutProps) {
 	return (
 		<Provider store={store}>
 			<PersistGate loading={null} persistor={persistor}>
-				<ThemeProvider attribute='class' defaultTheme='system' enableSystem>
-					<div>
-						<main>{children}</main>
-					</div>
-				</ThemeProvider>
+				<AuthProvider>
+					<ThemeProvider attribute='class' defaultTheme='system' enableSystem>
+						<div>
+							<main>{children}</main>
+						</div>
+					</ThemeProvider>
+				</AuthProvider>
 			</PersistGate>
 		</Provider>
 	)

@@ -1,3 +1,4 @@
+import { useAuth } from '@/contexts/AuthContext'
 import { LogOut } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -20,6 +21,8 @@ export function HeaderUser({
 		readonly avatar: string
 	}
 }) {
+	const { logout } = useAuth()
+
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -59,7 +62,7 @@ export function HeaderUser({
 					</div>
 				</DropdownMenuLabel>
 				<DropdownMenuSeparator />
-				<DropdownMenuItem>
+				<DropdownMenuItem onClick={logout}>
 					<LogOut className='mr-2 size-4' />
 					<span>Выйти</span>
 				</DropdownMenuItem>

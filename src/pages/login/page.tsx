@@ -1,9 +1,13 @@
 'use client'
 
+import { useAuth } from '@/contexts/AuthContext'
+import { useLoginMutation } from '@/store/entities'
+import { saveRefreshToken, saveToken } from '@/utils/auth'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
@@ -32,7 +36,8 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
-	const [isLoading, setIsLoading] = useState(false)
+	const { isAuthenticated, setIsAuthenticated, setUser } = useAuth()
+	const [loginMutation, { isLoading: isLoggingIn }] = useLoginMutation()
 	const [showPassword, setShowPassword] = useState(false)
 
 	const form = useForm<LoginFormValues>({
@@ -43,18 +48,71 @@ export default function LoginPage() {
 		},
 	})
 
+	// Если пользователь уже авторизован, перенаправляем на главную
+	useEffect(() => {
+		if (isAuthenticated) {
+			globalThis.location.href = '/admin-panel/'
+		}
+	}, [isAuthenticated])
+
+	if (isAuthenticated) {
+		return null
+	}
+
 	const onSubmit = async (data: LoginFormValues) => {
-		setIsLoading(true)
 		try {
-			// TODO: Реализовать логику авторизации
-			console.log('Login data:', data)
-			// await login(data.email, data.password)
+			const result = await loginMutation({
+				email: data.email,
+				password: data.password,
+			})
+
+			if (result.error) {
+				const errorMessage =
+					'data' in result.error &&
+					result.error.data &&
+					typeof result.error.data === 'object' &&
+					'message' in result.error.data
+						? String(result.error.data.message)
+						: 'Ошибка входа. Проверьте правильность данных.'
+
+				toast.error(errorMessage)
+				return
+			}
+
+			if (!result.data) {
+				toast.error('Ошибка входа. Попробуйте еще раз.')
+				return
+			}
+
+			// Сохраняем токены
+			if (result.data.access_token) {
+				saveToken(result.data.access_token)
+			}
+			if (result.data.refresh_token) {
+				saveRefreshToken(result.data.refresh_token)
+			}
+
+			// Сохраняем данные пользователя
+			if (result.data.user) {
+				setUser({
+					id: result.data.user.id,
+					email: result.data.user.email,
+				})
+			}
+
+			// Устанавливаем статус авторизации
+			setIsAuthenticated(true)
+
+			toast.success('Успешный вход в систему')
+
+			// Редирект произойдет автоматически через useEffect при изменении isAuthenticated
 		} catch (error) {
 			console.error('Login error:', error)
-		} finally {
-			setIsLoading(false)
+			toast.error('Произошла ошибка при входе')
 		}
 	}
+
+	const isLoading = isLoggingIn
 
 	return (
 		<div className='absolute inset-0 flex items-center justify-center bg-background p-4'>
@@ -143,4 +201,3 @@ export default function LoginPage() {
 		</div>
 	)
 }
-
