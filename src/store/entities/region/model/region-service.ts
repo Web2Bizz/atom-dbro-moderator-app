@@ -1,6 +1,6 @@
 import { baseQueryWithReauth } from '@/store/baseQueryWithReauth'
+import type { City } from '@/store/entities/city/model/type'
 import { createApi } from '@reduxjs/toolkit/query/react'
-import type { City } from '../city/model/type'
 import type {
 	CreateRegionRequest,
 	Region,
@@ -21,11 +21,10 @@ export const regionService = createApi({
 				method: 'GET',
 			}),
 			transformResponse: (response: RegionListResponse | Region[]) => {
-				const regions = Array.isArray(response) ? response : response.data || []
-				// Фильтруем удаленные записи (recordStatus !== "DELETED")
-				return regions.filter(
-					region => !region.recordStatus || region.recordStatus !== 'DELETED'
-				)
+				if (Array.isArray(response)) {
+					return response
+				}
+				return response.data || []
 			},
 			providesTags: ['Region'],
 		}),
@@ -102,11 +101,10 @@ export const regionService = createApi({
 				method: 'GET',
 			}),
 			transformResponse: (response: { data: City[] } | City[]) => {
-				const cities = Array.isArray(response) ? response : response.data || []
-				// Фильтруем удаленные записи (recordStatus !== "DELETED")
-				return cities.filter(
-					city => !city.recordStatus || city.recordStatus !== 'DELETED'
-				)
+				if (Array.isArray(response)) {
+					return response
+				}
+				return response.data || []
 			},
 			providesTags: (result, error, id) => [{ type: 'Region', id }, 'Region'],
 		}),

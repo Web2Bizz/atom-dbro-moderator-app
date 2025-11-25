@@ -22,11 +22,10 @@ export const cityService = createApi({
 				params: params || {},
 			}),
 			transformResponse: (response: CityListResponse | City[]) => {
-				const cities = Array.isArray(response) ? response : response.data || []
-				// Фильтруем удаленные записи (recordStatus !== "DELETED")
-				return cities.filter(
-					city => !city.recordStatus || city.recordStatus !== 'DELETED'
-				)
+				if (Array.isArray(response)) {
+					return response
+				}
+				return response.data || []
 			},
 			providesTags: ['City'],
 		}),

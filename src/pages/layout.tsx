@@ -1,3 +1,4 @@
+import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { setupStore } from '@/store/store'
 import { ThemeProvider } from 'next-themes'
@@ -28,6 +29,7 @@ export default function Layout({ children }: LayoutProps) {
 					<ThemeProvider attribute='class' defaultTheme='system' enableSystem>
 						<div>
 							<main>{children}</main>
+							<Toaster />
 						</div>
 					</ThemeProvider>
 				</AuthProvider>
