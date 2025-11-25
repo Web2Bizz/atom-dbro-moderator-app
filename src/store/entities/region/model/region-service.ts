@@ -21,10 +21,11 @@ export const regionService = createApi({
 				method: 'GET',
 			}),
 			transformResponse: (response: RegionListResponse | Region[]) => {
-				if (Array.isArray(response)) {
-					return response
-				}
-				return response.data || []
+				const regions = Array.isArray(response) ? response : response.data || []
+				// Фильтруем удаленные записи (recordStatus !== "DELETED")
+				return regions.filter(
+					region => !region.recordStatus || region.recordStatus !== 'DELETED'
+				)
 			},
 			providesTags: ['Region'],
 		}),
@@ -101,10 +102,11 @@ export const regionService = createApi({
 				method: 'GET',
 			}),
 			transformResponse: (response: { data: City[] } | City[]) => {
-				if (Array.isArray(response)) {
-					return response
-				}
-				return response.data || []
+				const cities = Array.isArray(response) ? response : response.data || []
+				// Фильтруем удаленные записи (recordStatus !== "DELETED")
+				return cities.filter(
+					city => !city.recordStatus || city.recordStatus !== 'DELETED'
+				)
 			},
 			providesTags: (result, error, id) => [{ type: 'Region', id }, 'Region'],
 		}),

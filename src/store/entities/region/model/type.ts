@@ -5,6 +5,7 @@ export interface Region {
 	name: string
 	createdAt?: string
 	updatedAt?: string
+	recordStatus?: string
 }
 
 // Типы для запросов
