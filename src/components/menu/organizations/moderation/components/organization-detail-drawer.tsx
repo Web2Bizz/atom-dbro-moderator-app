@@ -88,17 +88,19 @@ export function OrganizationDetailDrawer({
 
 								<TabsContent value='info' className='space-y-4 mt-4'>
 									<div className='grid gap-4 md:grid-cols-2'>
-										<Card>
-											<CardHeader className='pb-3'>
-												<div className='flex items-center gap-2'>
-													<Building2 className='size-4 text-muted-foreground' />
-													<h4 className='font-semibold'>Тип организации</h4>
-												</div>
-											</CardHeader>
-											<CardContent>
-												<Badge variant='outline'>{organization.type.name}</Badge>
-											</CardContent>
-										</Card>
+										{organization.type && (
+											<Card>
+												<CardHeader className='pb-3'>
+													<div className='flex items-center gap-2'>
+														<Building2 className='size-4 text-muted-foreground' />
+														<h4 className='font-semibold'>Тип организации</h4>
+													</div>
+												</CardHeader>
+												<CardContent>
+													<Badge variant='outline'>{organization.type.name}</Badge>
+												</CardContent>
+											</Card>
+										)}
 
 										<Card>
 											<CardHeader className='pb-3'>
@@ -141,23 +143,25 @@ export function OrganizationDetailDrawer({
 										</CardContent>
 									</Card>
 
-									<Card>
-										<CardHeader className='pb-3'>
-											<div className='flex items-center gap-2'>
-												<Users className='size-4 text-muted-foreground' />
-												<h4 className='font-semibold'>Виды помощи</h4>
-											</div>
-										</CardHeader>
-										<CardContent>
-											<div className='flex flex-wrap gap-2'>
-												{organization.helpTypes.map(helpType => (
-													<Badge key={helpType.id} variant='secondary'>
-														{helpType.name}
-													</Badge>
-												))}
-											</div>
-										</CardContent>
-									</Card>
+									{organization.helpTypes && organization.helpTypes.length > 0 && (
+										<Card>
+											<CardHeader className='pb-3'>
+												<div className='flex items-center gap-2'>
+													<Users className='size-4 text-muted-foreground' />
+													<h4 className='font-semibold'>Виды помощи</h4>
+												</div>
+											</CardHeader>
+											<CardContent>
+												<div className='flex flex-wrap gap-2'>
+													{organization.helpTypes.map(helpType => (
+														<Badge key={helpType.id} variant='secondary'>
+															{helpType.name}
+														</Badge>
+													))}
+												</div>
+											</CardContent>
+										</Card>
+									)}
 								</TabsContent>
 
 								<TabsContent value='details' className='space-y-4 mt-4'>

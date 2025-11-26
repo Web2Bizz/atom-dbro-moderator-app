@@ -1,6 +1,8 @@
 // Типы для организаций
 
 import type { City } from '../../city/model/type'
+import type { OrganizationType } from '../../organization-type/model/type'
+import type { HelpType } from '../../help-type/model/type'
 
 export interface Contact {
 	name: string
@@ -14,7 +16,9 @@ export interface Organization {
 	city?: City // API может возвращать объект city
 	typeId?: number
 	organizationTypeId?: number
+	type?: OrganizationType // API может возвращать объект type
 	helpTypeIds?: number[]
+	helpTypes?: HelpType[] // API может возвращать массив объектов helpTypes
 	latitude?: number
 	longitude?: number
 	summary?: string

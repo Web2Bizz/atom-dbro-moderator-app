@@ -161,3 +161,7 @@
 		animation: wobble-2 0.8s ease-in-out infinite;
 	}
 }
+
+.button {
+	cursor: pointer !important;
+}

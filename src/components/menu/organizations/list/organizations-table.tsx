@@ -8,6 +8,7 @@ import {
 	getFilteredRowModel,
 	getPaginationRowModel,
 	getSortedRowModel,
+	type Row,
 	type SortingState,
 	useReactTable,
 } from '@tanstack/react-table'
@@ -37,10 +38,14 @@ export function OrganizationsTable({
 	const columns = React.useMemo(() => createColumns({ onDelete }), [onDelete])
 
 	// Кастомная функция фильтрации - ищет только по названию организации
-	const globalFilterFn = (row: any, _columnId: string, filterValue: string) => {
+	const globalFilterFn = (
+		row: Row<Organization>,
+		_columnId: string,
+		filterValue: string
+	) => {
 		if (!filterValue) return true
 
-		const organization = row.original as Organization
+		const organization = row.original
 		const searchValue = filterValue.toLowerCase()
 		const name = (organization.name || '').toLowerCase()
 

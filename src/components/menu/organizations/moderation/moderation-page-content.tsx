@@ -67,17 +67,27 @@ const mapApiOrganizationToComponentOrganization = (
 					latitude: apiOrg.latitude || 0,
 					longitude: apiOrg.longitude || 0,
 			  },
-		type: {
-			id: apiOrg.typeId || apiOrg.organizationTypeId || 0,
-			name:
-				organizationTypesData.find(
-					t => t.id === (apiOrg.typeId || apiOrg.organizationTypeId)
-				)?.name || '',
-		},
-		helpTypes: (apiOrg.helpTypeIds || []).map(id => ({
-			id,
-			name: helpTypesData.find(h => h.id === id)?.name || '',
-		})),
+		type: apiOrg.type
+			? {
+					id: apiOrg.type.id,
+					name: apiOrg.type.name,
+			  }
+			: {
+					id: apiOrg.typeId || apiOrg.organizationTypeId || 0,
+					name:
+						organizationTypesData.find(
+							t => t.id === (apiOrg.typeId || apiOrg.organizationTypeId)
+						)?.name || '',
+			  },
+		helpTypes: apiOrg.helpTypes && apiOrg.helpTypes.length > 0
+			? apiOrg.helpTypes.map(ht => ({
+					id: ht.id,
+					name: ht.name,
+			  }))
+			: (apiOrg.helpTypeIds || []).map(id => ({
+					id,
+					name: helpTypesData.find(h => h.id === id)?.name || '',
+			  })),
 	}
 }
 
@@ -86,7 +96,7 @@ export function ModerationPageContent() {
 		data: organizationsData,
 		isLoading: isLoadingOrganizations,
 		error: organizationsError,
-	} = useGetOrganizationsQuery()
+	} = useGetOrganizationsQuery({ filteredByStatus: false })
 
 	const { data: citiesData } = useGetCitiesQuery()
 	const { data: organizationTypesData } = useGetOrganizationTypesQuery()

@@ -16,11 +16,21 @@ export const organizationService = createApi({
 	tagTypes: ['Organization'],
 	endpoints: builder => ({
 		// GET /v1/organizations - Получить все организации
-		getOrganizations: builder.query<Organization[], void>({
-			query: () => ({
-				url: '/v1/organizations',
-				method: 'GET',
-			}),
+		getOrganizations: builder.query<
+			Organization[],
+			{ filteredByStatus?: boolean } | void
+		>({
+			query: (params) => {
+				const queryParams = new URLSearchParams()
+				if (params?.filteredByStatus !== undefined) {
+					queryParams.append('filteredByStatus', String(params.filteredByStatus))
+				}
+				const queryString = queryParams.toString()
+				return {
+					url: `/v1/organizations${queryString ? `?${queryString}` : ''}`,
+					method: 'GET',
+				}
+			},
 			transformResponse: (response: OrganizationListResponse | Organization[]) => {
 				if (Array.isArray(response)) {
 					return response
