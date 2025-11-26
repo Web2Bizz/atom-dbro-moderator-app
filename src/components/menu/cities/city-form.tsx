@@ -1,7 +1,8 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Loader2 } from 'lucide-react'
+import { Loader2, MapPin } from 'lucide-react'
+import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -15,6 +16,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { MapPickerModal } from '@/components/ui/map-picker-modal'
 import {
 	Select,
 	SelectContent,
@@ -55,6 +57,8 @@ export function CityForm({
 	onCancel,
 	isLoading = false,
 }: CityFormProps) {
+	const [isMapModalOpen, setIsMapModalOpen] = React.useState(false)
+
 	const form = useForm<CityFormValues>({
 		resolver: zodResolver(cityFormSchema),
 		defaultValues: city
@@ -74,6 +78,11 @@ export function CityForm({
 
 	const onSubmitHandler = (data: CityFormValues) => {
 		onSubmit(data)
+	}
+
+	const handleMapSelect = (latitude: number, longitude: number) => {
+		form.setValue('latitude', latitude)
+		form.setValue('longitude', longitude)
 	}
 
 	return (
@@ -125,51 +134,76 @@ export function CityForm({
 					)}
 				/>
 
-				<div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
-					<FormField
-						control={form.control}
-						name='latitude'
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>
-									Широта <span className='text-destructive'>*</span>
-								</FormLabel>
-								<FormControl>
-									<Input
-										type='number'
-										placeholder='55.7558'
-										step='0.0001'
-										{...field}
-										onChange={e => field.onChange(Number(e.target.value))}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+				<div className='space-y-4'>
+					<div className='flex items-center justify-between'>
+						<FormLabel className='text-base font-semibold'>
+							Координаты <span className='text-destructive'>*</span>
+						</FormLabel>
+						<Button
+							type='button'
+							variant='outline'
+							size='sm'
+							onClick={() => setIsMapModalOpen(true)}
+						>
+							<MapPin className='mr-2 size-4' />
+							Выбрать на карте
+						</Button>
+					</div>
 
-					<FormField
-						control={form.control}
-						name='longitude'
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>
-									Долгота <span className='text-destructive'>*</span>
-								</FormLabel>
-								<FormControl>
-									<Input
-										type='number'
-										placeholder='37.6173'
-										step='0.0001'
-										{...field}
-										onChange={e => field.onChange(Number(e.target.value))}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+					<div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+						<FormField
+							control={form.control}
+							name='latitude'
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>
+										Широта <span className='text-destructive'>*</span>
+									</FormLabel>
+									<FormControl>
+										<Input
+											type='number'
+											placeholder='55.7558'
+											step='0.0001'
+											{...field}
+											onChange={e => field.onChange(Number(e.target.value))}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							control={form.control}
+							name='longitude'
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>
+										Долгота <span className='text-destructive'>*</span>
+									</FormLabel>
+									<FormControl>
+										<Input
+											type='number'
+											placeholder='37.6173'
+											step='0.0001'
+											{...field}
+											onChange={e => field.onChange(Number(e.target.value))}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
 				</div>
+
+				<MapPickerModal
+					open={isMapModalOpen}
+					onOpenChange={setIsMapModalOpen}
+					latitude={form.watch('latitude') || 55.7558}
+					longitude={form.watch('longitude') || 37.6173}
+					onSelect={handleMapSelect}
+				/>
 
 				<div className='flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end'>
 					<Button
