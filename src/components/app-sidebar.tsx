@@ -1,6 +1,5 @@
 import {
 	Building,
-	HelpCircle,
 	LayoutDashboard,
 	Map,
 	Settings,
@@ -86,11 +85,11 @@ const data = {
 				},
 			],
 		},
-		{
-			title: 'Поддержка',
-			url: '/support',
-			icon: HelpCircle,
-		},
+		// {
+		// 	title: 'Поддержка',
+		// 	url: '/support',
+		// 	icon: HelpCircle,
+		// },
 		{
 			title: 'Дополнительно',
 			url: '/help-types',
@@ -143,7 +142,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							className='data-[slot=sidebar-menu-button]:!p-1.5'
 						>
 							<Link to='/'>
-								<img src='/logo.png' alt='АТОМ ДОБРО' className='size-8' />
+								<img
+									src='/admin-panel/logo.png'
+									alt='АТОМ ДОБРО'
+									className='size-8'
+								/>
 								<span className='text-lg md:text-base font-semibold'>
 									АТОМ ДОБРО
 								</span>
