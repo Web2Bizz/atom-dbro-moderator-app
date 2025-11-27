@@ -198,3 +198,6 @@ export type { UploadedImage, UploadImagesResponse } from './upload'
 
 export { useAddExperienceMutation } from './experience'
 export type { AddExperienceRequest, AddExperienceResponse } from './experience'
+
+export { useGetStatisticsQuery } from './statistics'
+export type { Statistics, StatisticsResponse } from './statistics'

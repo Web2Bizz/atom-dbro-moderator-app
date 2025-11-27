@@ -12,6 +12,7 @@ import { organizationTypeService } from './entities/organization-type'
 import { questService } from './entities/quest'
 import { questUpdateService } from './entities/quest-update'
 import { regionService } from './entities/region'
+import { statisticsService } from './entities/statistics'
 import { uploadService } from './entities/upload'
 import { userService } from './entities/user'
 
@@ -37,6 +38,7 @@ const rootReducer = combineReducers({
 	[questUpdateService.reducerPath]: questUpdateService.reducer,
 	[uploadService.reducerPath]: uploadService.reducer,
 	[experienceService.reducerPath]: experienceService.reducer,
+	[statisticsService.reducerPath]: statisticsService.reducer,
 })
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)
@@ -69,7 +71,8 @@ export const setupStore = () => {
 				questService.middleware,
 				questUpdateService.middleware,
 				uploadService.middleware,
-				experienceService.middleware
+				experienceService.middleware,
+				statisticsService.middleware
 			),
 	})
 
